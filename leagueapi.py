@@ -1,6 +1,6 @@
 import requests
 
-class lolAPI:
+class LolAPI:
     """League API"""
     endpoint = 'api.riotgames.com'
 
@@ -11,7 +11,8 @@ class lolAPI:
     def _request(self, path):
         res = requests.get(
             f'https://{self.region}.{self.endpoint}' + path,
-            headers=self.headers
+            headers=self.headers)
+        return res
 
     def getPUUID(self, gameName, tagLine):
         """get ID to make other requets"""
