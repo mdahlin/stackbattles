@@ -21,7 +21,7 @@ class LolAPI:
         res = self._request(base + f'{gameName}/{tagLine}')
         return res.json()['puuid']
 
-    def getMatchIdList(self, puuid: str, n: int=20) -> list[str]:
+    def getMatchIdList(self, puuid: str, n: int=20) -> list:
         """get list of n most recent match by match id
 
         Notes
