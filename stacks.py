@@ -4,15 +4,7 @@ from secrets import API_KEY
 api = LolAPI(API_KEY, 'americas')
 
 homies = ['Mahat Magandalf', 'Dahlin', '4th Migo', 'Kabib Nurmagabob', 'Lacr3188', 'Eminems Sweater', 'GROBGOBGLOBGROD']
-
-def getHomiesPUUID(homies):
-    puuids = []
-    for homie in homies:
-        puuids.append(api.getPUUID(homie, 'NA1'))
-
-    return puuids
-
-homies_puuid = getHomiesPUUID(homies)
+homies_puuid = [api.getPUUID(homie, 'NA1') for homie in homies]
 
 def getStacks(matchJson):
     """specific match info"""
@@ -57,7 +49,11 @@ for match_id in match_ids:
 
     max_stacks = 0
     for stacker in stacksInfo:
-        if stacker['DH Stacks'] is not None and stacker['DH Stacks'] > max_stacks and stacker['puuid'] in homies_puuid:
+        if stacker['DH Stacks'] is not None and stacker['DH Stacks'] >= max_stacks and stacker['puuid'] in homies_puuid:
+            if stacker['DH Stacks'] == max_stacks:
+                if stacker['totalDamageDealtToChampions'] < winner['totalDamageDealtToChampions']:
+                    continue
+
             winner = stacker
             max_stacks = stacker['DH Stacks']
 
