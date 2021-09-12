@@ -1,6 +1,19 @@
 from leagueapi import LolAPI
 from secrets import API_KEY
 
+api = LolAPI(API_KEY, 'americas')
+
+homies = ['Mahat Magandalf', 'Dahlin', '4th Migo', 'Kabib Nurmagabob', 'Lacr3188', 'Eminems Sweater', 'GROBGOBGLOBGROD']
+
+def getHomiesPUUID(homies):
+    puuids = []
+    for homie in homies:
+        puuids.append(api.getPUUID(homie, 'NA1'))
+
+    return puuids
+
+homies_puuid = getHomiesPUUID(homies)
+
 def getStacks(matchJson):
     """specific match info"""
     playerMetrics = []
@@ -8,6 +21,7 @@ def getStacks(matchJson):
 
     for p in matchJson['info']['participants']:
         stats = {}
+        stats['puuid'] = p['puuid']
         stats['summonerName'] = p['summonerName']
         stats['championName'] = p['championName']
         stats['totalDamageDealtToChampions'] = p['totalDamageDealtToChampions']
@@ -27,14 +41,27 @@ def getStacks(matchJson):
     return playerMetrics
 
 
-api = LolAPI(API_KEY, 'americas')
-
 puuid = api.getPUUID('Mahat Magandalf', 'NA1')
-matches = api.getMatchIdList(puuid, 1)
+match_ids = api.getMatchIdList(puuid, 100)
 
-match = api.getMatchInfo(matches[0])
+winner = None
+for match_id in match_ids:
+    match = api.getMatchInfo(match_id)
 
-stacksInfo = getStacks(match)
+    gameMode = match['info']['gameMode']
 
-for i in stacksInfo:
-    print(i)
+    if gameMode != 'ARAM':
+        continue
+
+    stacksInfo = getStacks(match)
+
+    max_stacks = 0
+    for stacker in stacksInfo:
+        if stacker['DH Stacks'] is not None and stacker['DH Stacks'] > max_stacks and stacker['puuid'] in homies_puuid:
+            winner = stacker
+            max_stacks = stacker['DH Stacks']
+
+    break
+
+
+print(winner)
