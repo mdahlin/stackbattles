@@ -4,24 +4,24 @@ class LolAPI:
     """League API"""
     endpoint = 'api.riotgames.com'
 
-    def __init__(self, APIKEY, region):
+    def __init__(self, APIKEY: str, region: str):
         self.region=region
         self.headers={'X-Riot-Token': APIKEY}
 
-    def _request(self, path):
+    def _request(self, path: str) -> requests.models.Response:
         res = requests.get(
             f'https://{self.region}.{self.endpoint}' + path,
             headers=self.headers
         )
         return res
 
-    def getPUUID(self, gameName, tagLine):
+    def getPUUID(self, gameName: str, tagLine: str) -> dict:
         """get ID to make other requets"""
         base = f'/riot/account/v1/accounts/by-riot-id/'
         res = self._request(base + f'{gameName}/{tagLine}')
         return res.json()['puuid']
 
-    def getMatchIdList(self, puuid, n=20):
+    def getMatchIdList(self, puuid: str, n: int=20) -> list[str]:
         """get list of n most recent match by match id
 
         Notes
@@ -47,6 +47,6 @@ class LolAPI:
 
         return match_ids
 
-    def getMatchInfo(self, match_id):
+    def getMatchInfo(self, match_id: str) -> dict:
         res = self._request(f'/lol/match/v5/matches/{match_id}')
         return res.json()
