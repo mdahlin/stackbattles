@@ -6,6 +6,7 @@ import os
 from new_participants import getParticipantData
 from new_participants import updateParticipants
 import pickle as pkl
+import time
 
 """code wont work unless maindir references the stackbattles directory, 
 and a subdirectory labeled "participant_jsons" is present"""
@@ -24,6 +25,9 @@ for key in p.keys():
         else:
             getParticipantData(puuid, maindir+"participant_jsons/",match_path)
             updateParticipants(os.listdir(maindir+"participant_jsons/"),json_path)
-            print("Number of puuids used to pull match data: {c}" .format(c = len(p.keys())))
-            break
+            with open(json_path,) as u_file:
+                u = json.load(u_file)
+            print("Number of puuids used to pull match data: {c}" .format(c = len(u.keys())))
+            time.sleep(180)
+            
 
