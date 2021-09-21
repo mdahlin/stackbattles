@@ -14,6 +14,9 @@ maindir = "/mnt/c/Users/sydmb/Documents/stackbattles/"
 match_path= "{maindir}match_list.pkl" .format(maindir=maindir)
 json_path ="{maindir}participants.json" .format(maindir=maindir)
 
+with open(json_path, ) as p_file:
+    p = json.load(p_file)
+
 for key in p.keys():
     for puuid in p[key]:
         if puuid in p.keys():
