@@ -24,11 +24,14 @@ participant_dirs = os.listdir(maindir)
     #p_json = json.load(json_file)
 
 
-def getParticipantData(ipuuid, data_dir):
+def getParticipantData(ipuuid, data_dir, list_path):
     """takes a puuid and an api object from leagueapi and runs the getmatchIDList and getMatchInfo methods
     creates a subdirectory for matched pulled from the puuids history at the path specificed by data_dir
-    and writes json files of participant data from those games."""
+    and writes json files of participant data from those games.
+    updates a match_list to include"""
 
+    with open(list_path,"rb") as pkl_file:
+        match_list = pkl.load(pkl_file)
 
     api = LolAPI(API_KEY, 'americas')
     match_ids = api.getMatchIdList(ipuuid, 100)
@@ -39,7 +42,6 @@ def getParticipantData(ipuuid, data_dir):
 
         try:
             gameMode = match['info']['gameMode']
-
             if gameMode == 'ARAM':
                 matches.append(match)
             else:
@@ -53,14 +55,26 @@ def getParticipantData(ipuuid, data_dir):
     os.makedirs(mydir)
     for match in matches:
         game_id = match['metadata']['matchId']
-        path = "{mydir}/json_{puuid}_{game_id}.json" .format(mydir=mydir, puuid=ipuuid, game_id=game_id)
-
-        out_file = open(path, "w")
-        json.dump(match['info']['participants'], out_file, indent = 6)
-        out_file.close()
-
-def updateParticipants(p_json, participant_dirs, json_path):
+        #only write match data if match is not found in match_list
+        if game_id in match_list:
+            continue
+        else:
+            path = "{mydir}/json_{puuid}_{game_id}.json" .format(mydir=mydir, puuid=ipuuid, game_id=game_id)
+            match_list.append(game_id)
+            out_file = open(path, "w")
+            json.dump(match['info']['participants'], out_file, indent = 6)
+            out_file.close()
     
+    #update and store match list
+    with open(list_path, "wb") as pkl_file:
+        pkl.dump(match_list, pkl_file)
+            
+
+def updateParticipants(participant_dirs, json_path):
+    #load initial participants json file
+    with open(json_path,) as json_file:
+        p_json = json.load(json_file)
+
     #iterate through participant directories to get participant_dirs
     for participant_dir in participant_dirs:
         puuid = participant_dir.split("|")[0]
