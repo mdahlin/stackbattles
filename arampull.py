@@ -4,7 +4,6 @@ from leagueapi import LolAPI
 import datetime
 import os
 from new_participants import getParticipantData
-from new_participants import updateParticipants
 import pickle as pkl
 import time
 
@@ -23,8 +22,7 @@ for key in p.keys():
         if puuid in p.keys():
             continue
         else:
-            getParticipantData(puuid, maindir+"participant_jsons/",match_path)
-            updateParticipants(os.listdir(maindir+"participant_jsons/"),json_path)
+            getParticipantData(puuid, maindir+"participant_jsons/",match_path, json_path)
             with open(json_path,) as u_file:
                 u = json.load(u_file)
             print("Number of puuids used to pull match data: {c}" .format(c = len(u.keys())))

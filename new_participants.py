@@ -24,11 +24,14 @@ participant_dirs = os.listdir(maindir)
     #p_json = json.load(json_file)
 
 
-def getParticipantData(ipuuid, data_dir, list_path):
+def getParticipantData(ipuuid, data_dir, list_path, json_path):
     """takes a puuid and an api object from leagueapi and runs the getmatchIDList and getMatchInfo methods
     creates a subdirectory for matched pulled from the puuids history at the path specificed by data_dir
     and writes json files of participant data from those games.
     updates a match_list to include"""
+
+    with open(json_path,) as json_file:
+        p_json = json.load(json_file)
 
     with open(list_path,"rb") as pkl_file:
         match_list = pkl.load(pkl_file)
@@ -53,55 +56,36 @@ def getParticipantData(ipuuid, data_dir, list_path):
     d = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     mydir = "{data_dir}/{puuid}|{d}" .format(data_dir=data_dir, puuid=ipuuid, d=d)
     os.makedirs(mydir)
+    participants = []
     for match in matches:
         game_id = match['metadata']['matchId']
         #only write match data if match is not found in match_list
         if game_id in match_list:
             continue
         else:
+            #create a path to write participant data too
             path = "{mydir}/json_{puuid}_{game_id}.json" .format(mydir=mydir, puuid=ipuuid, game_id=game_id)
+            #append the match id to the match list
             match_list.append(game_id)
+
+            #write the participants json data to an out_file
             out_file = open(path, "w")
             json.dump(match['info']['participants'], out_file, indent = 6)
             out_file.close()
+
+            #go through each participant in the match and append their puuid to the participants list to be added as the key value pair in participants json
+            for participant in match['info']['participants']:
+                if participant['puuid'] not in participants and participant['puuid'] != ipuuid:
+                    participants.append(participant['puuid'])
     
     #update and store match list
     with open(list_path, "wb") as pkl_file:
         pkl.dump(match_list, pkl_file)
-            
-
-def updateParticipants(participant_dirs, json_path):
-    #load initial participants json file
-    with open(json_path,) as json_file:
-        p_json = json.load(json_file)
-
-    #iterate through participant directories to get participant_dirs
-    for participant_dir in participant_dirs:
-        puuid = participant_dir.split("|")[0]
-        participants =[]
-        #iterate through each json for that participant
-        for filename in os.listdir(os.path.join(maindir,participant_dir)):
-            f=os.path.join(maindir,participant_dir,filename)
-            if os.path.isfile(f):
-                g = open(f, )
-                game = json.load(g)
-
-                #check if puuid is key or exists in previous games among pull
-                for participant in game:
-                    if participant['puuid'] not in participants and participant['puuid'] != puuid:
-                        participants.append(participant['puuid'])
-                    else:
-                        continue
-        #if puuid is not in the participant json add it with participants
-        if puuid not in p_json.keys():
-            p_json[puuid] = participants
-            
-    '''
-    update json at json path with key value pair: 
-    key = puuid used to pull data, 
-    value is a list of all unique participants that played arams with puuid pulled
-    '''
-    with open(json_path,'w') as json_file:
+    
+    #update and store participant json
+    if ipuuid not in p_json.keys():
+        p_json[ipuuid] = participants
+    with open(json_path, "w") as json_file:
         json.dump(p_json, json_file)
 
 
