@@ -2,7 +2,10 @@ from leagueapi import LolAPI
 from secrets import API_KEY
 
 class Card:
-    """Base class for card"""
+    """
+    Base class for card
+    Note: ALL CARD FUNCTIONS MUST INCLUDE getCard AS THE FIRST WORDS OF THE FUNCTION
+    """
 
     def __init__(self, matchJson, homies):
         self.matchJson = matchJson
@@ -33,6 +36,10 @@ class Card:
             pData['trueDamageDealtToChampions'] = p['trueDamageDealtToChampions']
             pData['teamId'] = p['teamId']
             pData['timeCCingOthers'] = p['timeCCingOthers']
+            pData['goldEarned'] = p['goldEarned']
+            pData['largestCriticalStrike'] = p['largestCriticalStrike']
+            pData['damageDealtToBuildings'] = p['damageDealtToBuildings']
+            pData['damageDealtToTurrets'] = p['damageDealtToTurrets']
 
             if p['perks']['styles'][0]['selections'][0]['perk'] == 8128:
                 pData['DH Damage'] = p['perks']['styles'][0]['selections'][0]['var1']
@@ -106,7 +113,7 @@ class Card:
         return ret
 
 
-    def getStackCard(self, basePriority, getCardForGoodTeam = True):
+    def getCardStack(self, basePriority, getCardForGoodTeam = True):
         """
         basePriority : initial priority value to be scaled by card data
         getCardForGoodTeam : true if get card for homies team, false for enemy team
@@ -144,7 +151,7 @@ class Card:
         else:
             return ["", "", "", 0]
 
-    def getTankmasterCard(self, basePriority, getCardForGoodTeam = True):
+    def getCardTankmaster(self, basePriority, getCardForGoodTeam = True):
         """
         basePriority : initial priority value to be scaled by card data
         getCardForGoodTeam : true if get card for homies team, false for enemy team
@@ -179,7 +186,7 @@ class Card:
         else:
             return ["", "", "", 0]
 
-    def getTrueDamageCard(self, basePriority, getCardForGoodTeam = True):
+    def getCardTrueDamage(self, basePriority, getCardForGoodTeam = True):
         """
         basePriority : initial priority value to be scaled by card data
         getCardForGoodTeam : true if get card for homies team, false for enemy team
@@ -222,7 +229,7 @@ class Card:
         else:
             return ["", "", "", 0]
         
-    def getPvECard(self, basePriority, getCardForGoodTeam = True):
+    def getCardPvE(self, basePriority, getCardForGoodTeam = True):
         """
         basePriority : initial priority value to be scaled by card data
         getCardForGoodTeam : true if get card for homies team, false for enemy team
@@ -262,7 +269,7 @@ class Card:
         else:
             return ["", "", "", 0]
 
-    def getFeedingWeenieCard(self, basePriority, getCardForGoodTeam = True):
+    def getCardFeedingWeenie(self, basePriority, getCardForGoodTeam = True):
         """
         basePriority : initial priority value to be scaled by card data
         getCardForGoodTeam : true if get card for homies team, false for enemy team
@@ -301,7 +308,7 @@ class Card:
         else:
             return ["", "", "", 0]
 
-    def getCCLordCard(self, basePriority, getCardForGoodTeam = True):
+    def getCardCCLord(self, basePriority, getCardForGoodTeam = True):
         """
         basePriority : initial priority value to be scaled by card data
         getCardForGoodTeam : true if get card for homies team, false for enemy team
@@ -333,6 +340,152 @@ class Card:
         else:
             return ["", "", "", 0]
 
+    def getCardMoneySpender(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        10 more deaths than kills
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+        """
+        cardName = "Big Money"
+        statName = "goldEarned"
+        winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
+        if winner[0] is not None:
+            goldEarnedPercent = winner[2]*100
+            scaling = 0 if goldEarnedPercent < 25 else max(1, min(4, goldEarnedPercent / 20))
+
+            ret = []
+            ret.append(winner[0]['summonerName'])
+            ret.append(cardName)
+            ret.append(f'Earned {goldEarnedPercent:.2f}% of the teams gold')
+            ret.append(basePriority * scaling)
+            ret.append(winner[0]['championName'])
+            return ret
+        else:
+            return ["", "", "", 0]
+
+    def getCardBigDeeps(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        10 more deaths than kills
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+        """
+        cardName = "Big Deeps"
+        statName = "totalDamageDealtToChampions"
+        winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
+        if winner[0] is not None:
+            damagePercent = winner[2]*100
+            scaling = 0 if damagePercent < 25 else max(1, min(4, damagePercent / 20))
+
+            ret = []
+            ret.append(winner[0]['summonerName'])
+            ret.append(cardName)
+            ret.append(f'Dealt {damagePercent:.2f}% of the teams damage')
+            ret.append(basePriority * scaling)
+            ret.append(winner[0]['championName'])
+            return ret
+        else:
+            return ["", "", "", 0]
+
+
+    def getCardBigCrit(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        10 more deaths than kills
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+        """
+        cardName = "Crit King"
+        statName = "largestCriticalStrike"
+        winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
+        if winner[0] is not None:
+            biggestCrit = winner[1]
+            scaling = 0 if biggestCrit < 1200 else max(1, min(4, biggestCrit / 800))
+
+            ret = []
+            ret.append(winner[0]['summonerName'])
+            ret.append(cardName)
+            ret.append(f'Biggest crit: {biggestCrit}')
+            ret.append(basePriority * scaling)
+            ret.append(winner[0]['championName'])
+            return ret
+        else:
+            return ["", "", "", 0]
+
+
+    def getCardObjectivePlayer(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        10 more deaths than kills
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+        """
+        cardName = "Tower Toppler"
+        maxBuildingDamage = 0
+        teamBuildingDamage = 0
+        winner = None
+        teamData = self.goodTeamStats if getCardForGoodTeam else self.badTeamStats
+        for player in teamData:
+            pBuildingDamage = player['damageDealtToBuildings'] + player['damageDealtToTurrets']
+            teamBuildingDamage += pBuildingDamage
+            if pBuildingDamage > maxBuildingDamage:
+                maxBuildingDamage = pBuildingDamage
+                winner = player
+            
+        damagePercentage = (maxBuildingDamage / teamBuildingDamage) * 100
+        scaling = 0 if damagePercentage < 25 else max(1, min(3, damagePercentage / 15))
+        if winner is not None:
+            ret = []
+            ret.append(winner['summonerName'])
+            ret.append(cardName)
+            ret.append(f'Dealt {damagePercentage:.2f} of the teams damage to structures')
+            ret.append(basePriority * scaling)
+            ret.append(winner['championName'])
+            return ret
+        else:
+            return ["", "", "", 0]
+
+
+        #Remaining Card Ideas
+        #abilities used
+        #objectives stolen
+        #clean CS
+        #penta kill
+        #vision score
+
 
 class CardManager:
     """
@@ -340,37 +493,37 @@ class CardManager:
     Initialize with player name for cards
     Call getCards
     """
-    def __init__(self, player = "Kabib Nurmagabob", region = "NA1", apiKey = API_KEY):
+    def __init__(self, player = "Kabib Nurmagabob", region = "NA1", apiKey = API_KEY, homies = None):
         """
         Initialize with desired player, region, and if possible, API Key
         """
         self.player = player
         self.region = region
         self.key = apiKey
+        if homies is None:
+            homies = ['Mahat Magandalf', 'Dahlin', '4th Migo', 'Kabib Nurmagabob', 'Lacr3188', 'Eminems Sweater', 'GROBGOBGLOBGROD']
+        self.homies = homies
 
     def getCards(self, numCards = 4):
         api = LolAPI(self.key, 'americas')
-        homies = ['Mahat Magandalf', 'Dahlin', '4th Migo', 'Kabib Nurmagabob', 'Lacr3188', 'Eminems Sweater', 'GROBGOBGLOBGROD']
-        homies_puuid = [api.getPUUID(homie, self.region) for homie in homies]
-        puuid = api.getPUUID(self.player, self.region)
-        match_id = api.getMatchIdList(puuid, 2)
-        match = api.getMatchInfo(match_id[1])
-        mCard = Card(match, homies_puuid)
+
+        homies_puuid = [api.getPUUID(homie, self.region) for homie in self.homies]
+        puuid = api.getPUUID(self.player, self.region)          #get puuid of player of interest
+        match_id = api.getMatchIdList(puuid, 1)                 #get match data of last match
+        match = api.getMatchInfo(match_id[0])
+
+        mCard = Card(match, homies_puuid)                       #create card object
         mCard.parseJson()
         mCard.splitTeamData()
+
         cardStack = []
-        card = mCard.getStackCard(5)
-        cardStack.append((card[3], card))
-        card = mCard.getTankmasterCard(3)
-        cardStack.append((card[3], card))
-        card = mCard.getTrueDamageCard(2)
-        cardStack.append((card[3], card))
-        card = mCard.getPvECard(3)
-        cardStack.append((card[3], card))
-        card = mCard.getFeedingWeenieCard(3)
-        cardStack.append((card[3], card))
-        card = mCard.getCCLordCard(3)
-        cardStack.append((card[3], card))
+        cardList = dir(mCard)                                   #get all functions in card class
+        cardList[:] = [x for x in cardList if "getCard" in x]   #keep functions with getCard in the name, as these are card functions
+
+        for i in cardList:                                      #run all card functions
+            func = getattr(mCard, i)
+            card = func(3)     #3 is default priority for now
+            cardStack.append((card[3], card))
 
         if len(cardStack) <= numCards:
             return [x[1] for x in cardStack]
@@ -379,5 +532,5 @@ class CardManager:
             return cardStack[0:numCards]
 
 man = CardManager()
-ret = man.getCards(8)
+ret = man.getCards(9)
 print(ret)
