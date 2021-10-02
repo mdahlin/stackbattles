@@ -1,3 +1,4 @@
+from re import match
 from leagueapi import LolAPI
 from secrets import API_KEY
 
@@ -40,6 +41,8 @@ class Card:
             pData['largestCriticalStrike'] = p['largestCriticalStrike']
             pData['damageDealtToBuildings'] = p['damageDealtToBuildings']
             pData['damageDealtToTurrets'] = p['damageDealtToTurrets']
+            pData['totalMinionsKilled'] = p['totalMinionsKilled']
+            pData['timePlayed'] = p['timePlayed']
 
             if p['perks']['styles'][0]['selections'][0]['perk'] == 8128:
                 pData['DH Damage'] = p['perks']['styles'][0]['selections'][0]['var1']
@@ -139,7 +142,15 @@ class Card:
   
         if winner[0] is not None:
             dif = winner[1] - second[1]
+            if dif == 0:
+                if winner[0]['totalDamageDealtToChampions'] < second[0]['totalDamageDealtToChampions']:
+                    t = winner
+                    winner = second
+                    second = t
+                    
             scaling = max(1, min(3, dif / max(10, winner[1]))) if winner[1] > 0 else 0
+            if self.matchJson['info']['gameMode'] == 'ARAM':        #always show stack card in aram
+                scaling = 100
 
             ret = []
             ret.append(winner[0]['summonerName'])
@@ -257,7 +268,7 @@ class Card:
                 winner = dmg
         
         lowestPercent *= 100
-        scaling = 0 if lowestPercent > 30 else min(1, max(3, 30 / lowestPercent))
+        scaling = 0 if lowestPercent > 25 else min(1, max(3, 25 / lowestPercent))
         if winner is not None:
             ret = []
             ret.append(winner['summonerName'])
@@ -314,7 +325,7 @@ class Card:
         getCardForGoodTeam : true if get card for homies team, false for enemy team
 
         Description: 
-        10 more deaths than kills
+        Highest CC score
 
         return a list with format:
             [0] - summoner name
@@ -346,7 +357,7 @@ class Card:
         getCardForGoodTeam : true if get card for homies team, false for enemy team
 
         Description: 
-        10 more deaths than kills
+        Most money
 
         return a list with format:
             [0] - summoner name
@@ -378,7 +389,7 @@ class Card:
         getCardForGoodTeam : true if get card for homies team, false for enemy team
 
         Description: 
-        10 more deaths than kills
+        Most damage
 
         return a list with format:
             [0] - summoner name
@@ -411,7 +422,7 @@ class Card:
         getCardForGoodTeam : true if get card for homies team, false for enemy team
 
         Description: 
-        10 more deaths than kills
+        Largest critical strike
 
         return a list with format:
             [0] - summoner name
@@ -444,7 +455,7 @@ class Card:
         getCardForGoodTeam : true if get card for homies team, false for enemy team
 
         Description: 
-        10 more deaths than kills
+        Most damage to towers / inhibs
 
         return a list with format:
             [0] - summoner name
@@ -478,11 +489,76 @@ class Card:
         else:
             return ["", "", "", 0]
 
+    def getCardNoDamage(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        Least Damage
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+        """
+        cardName = "I did no dAmage!"
+        statName = "totalDamageDealtToChampions"
+        winner = self.getNPlaceStatWinner(statName, 4, getCardForGoodTeam)
+        if winner[0] is not None:
+            noDamage = winner[1]
+            noDamagePercent = winner[2] * 100
+            scaling = 0 if noDamagePercent > 14 else max(1, min(4, 10 / max(1, noDamagePercent)))
+
+            ret = []
+            ret.append(winner[0]['summonerName'])
+            ret.append(cardName)
+            ret.append(f'Only {noDamage} damage. ({noDamagePercent:.2f}% of teams damage. noob')
+            ret.append(basePriority * scaling)
+            ret.append(winner[0]['championName'])
+            return ret
+        else:
+            return ["", "", "", 0]
+
+    def getCardCSWinner(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        Least Damage
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+        """
+        cardName = "Farming Queen"
+        statName = "totalMinionsKilled"
+        winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
+        if winner[0] is not None:
+            minPlayed = winner[0]['timePlayed'] / 60
+            csPerMin = winner[1] / minPlayed
+            scaling = 0 if csPerMin < 9 else max(1, min(4, csPerMin / 7))
+
+            ret = []
+            ret.append(winner[0]['summonerName'])
+            ret.append(cardName)
+            ret.append(f'Clean farm bro. {csPerMin:.2f} cs per minute')
+            ret.append(basePriority * scaling)
+            ret.append(winner[0]['championName'])
+            return ret
+        else:
+            return ["", "", "", 0]
+
 
         #Remaining Card Ideas
         #abilities used
         #objectives stolen
-        #clean CS
         #penta kill
         #vision score
 
@@ -519,10 +595,11 @@ class CardManager:
         cardStack = []
         cardList = dir(mCard)                                   #get all functions in card class
         cardList[:] = [x for x in cardList if "getCard" in x]   #keep functions with getCard in the name, as these are card functions
+        getCardsForGoodTeam = True
 
         for i in cardList:                                      #run all card functions
             func = getattr(mCard, i)
-            card = func(3)     #3 is default priority for now
+            card = func(3, getCardsForGoodTeam)     #3 is default priority for now
             cardStack.append((card[3], card))
 
         if len(cardStack) <= numCards:
@@ -531,6 +608,8 @@ class CardManager:
             cardStack.sort(key = lambda x: x[0], reverse = True)
             return cardStack[0:numCards]
 
-man = CardManager()
-ret = man.getCards(9)
-print(ret)
+#example usage
+man = CardManager(player = 'Kabib Nurmagabob')
+ret = man.getCards(12)
+ret.sort(key = lambda x: x[3], reverse = True)
+print(*ret, sep = "\n")
