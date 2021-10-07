@@ -620,4 +620,8 @@ if __name__ == '__main__':
     man = CardManager(player = 'Kabib Nurmagabob')
     ret = man.getCards(12)
     ret.sort(key = lambda x: x[3], reverse = True)
+<<<<<<< HEAD
     print(*ret, sep = "\n")
+=======
+    print(*ret, sep = "\n")
+>>>>>>> 9eba038ce3eae68887ca60f931f6dce793096464
