@@ -1,3 +1,4 @@
+# NOT BEING USED UNTIL `discord.py` STOPS WORKING
 import requests
 
 class DiscordAPI:

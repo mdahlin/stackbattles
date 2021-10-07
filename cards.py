@@ -608,8 +608,9 @@ class CardManager:
             cardStack.sort(key = lambda x: x[0], reverse = True)
             return cardStack[0:numCards]
 
-#example usage
-man = CardManager(player = 'Kabib Nurmagabob')
-ret = man.getCards(12)
-ret.sort(key = lambda x: x[3], reverse = True)
-print(*ret, sep = "\n")
+if __name__ == '__main__':
+    #example usage
+    man = CardManager(player = 'Kabib Nurmagabob')
+    ret = man.getCards(12)
+    ret.sort(key = lambda x: x[3], reverse = True)
+    print(*ret, sep = "\n")
