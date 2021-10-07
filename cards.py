@@ -2,6 +2,8 @@ from re import match
 from leagueapi import LolAPI
 from secrets import API_KEY
 
+NUM_CARDS = 12 #pls update if adding cards
+
 class Card:
     """
     Base class for card
@@ -482,7 +484,7 @@ class Card:
             ret = []
             ret.append(winner['summonerName'])
             ret.append(cardName)
-            ret.append(f'Dealt {damagePercentage:.2f} of the teams damage to structures')
+            ret.append(f'Dealt {damagePercentage:.2f}% of the teams damage to structures')
             ret.append(basePriority * scaling)
             ret.append(winner['championName'])
             return ret
@@ -511,11 +513,13 @@ class Card:
             noDamage = winner[1]
             noDamagePercent = winner[2] * 100
             scaling = 0 if noDamagePercent > 14 else max(1, min(4, 10 / max(1, noDamagePercent)))
+            if(winner[0]['summonerName'] == "4th Migo"):
+                scaling = 100
 
             ret = []
             ret.append(winner[0]['summonerName'])
             ret.append(cardName)
-            ret.append(f'Only {noDamage} damage. ({noDamagePercent:.2f}% of teams damage. noob')
+            ret.append(f'Only {noDamage} damage. ({noDamagePercent:.2f}% of teams damage. noob)')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
             return ret
@@ -543,7 +547,7 @@ class Card:
         if winner[0] is not None:
             minPlayed = winner[0]['timePlayed'] / 60
             csPerMin = winner[1] / minPlayed
-            scaling = 0 if csPerMin < 9 else max(1, min(4, csPerMin / 7))
+            scaling = 0 if csPerMin < 9 else max(1, min(4, csPerMin / 5))
 
             ret = []
             ret.append(winner[0]['summonerName'])
@@ -602,14 +606,18 @@ class CardManager:
             card = func(3, getCardsForGoodTeam)     #3 is default priority for now
             cardStack.append((card[3], card))
 
+        numCards = min(numCards, NUM_CARDS)
+
         if len(cardStack) <= numCards:
             return [x[1] for x in cardStack]
         else:
             cardStack.sort(key = lambda x: x[0], reverse = True)
-            return cardStack[0:numCards]
+            cardStack = cardStack[0:numCards]
+            return [x[1] for x in cardStack]
 
-#example usage
-man = CardManager(player = 'Kabib Nurmagabob')
-ret = man.getCards(12)
-ret.sort(key = lambda x: x[3], reverse = True)
-print(*ret, sep = "\n")
+if __name__ == '__main__':
+    #example usage
+    man = CardManager(player = 'Kabib Nurmagabob')
+    ret = man.getCards(12)
+    ret.sort(key = lambda x: x[3], reverse = True)
+    print(*ret, sep = "\n")
