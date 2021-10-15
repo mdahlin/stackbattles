@@ -577,12 +577,11 @@ class CardManager:
         self.region = region
         self.key = apiKey
         if homies is None:
-            homies = ['Mahat Magandalf', 'Dahlin', '4th Migo', 'Kabib Nurmagabob', 'Lacr3188', 'Eminems Sweater', 'GROBGOBGLOBGROD']
+            homies = ['Mahat Magandalf', 'Dahlin', 'Kabib Nurmagabob', 'Lacr3188', 'Eminems Sweater', 'GROBGOBGLOBGROD']
         self.homies = homies
 
     def getCards(self, numCards = 4):
         api = LolAPI(self.key, 'americas')
-
         homies_puuid = [api.getPUUID(homie, self.region) for homie in self.homies]
         puuid = api.getPUUID(self.player, self.region)          #get puuid of player of interest
         match_id = api.getMatchIdList(puuid, 1)                 #get match data of last match
@@ -603,14 +602,13 @@ class CardManager:
             cardStack.append((card[3], card))
 
         if len(cardStack) <= numCards:
-            return [x[1] for x in cardStack]
+            return match_id[0], [x[1] for x in cardStack]
         else:
             cardStack.sort(key = lambda x: x[0], reverse = True)
-            return cardStack[0:numCards]
+            return match_id[0], cardStack[0:numCards]
 
 if __name__ == '__main__':
     #example usage
     man = CardManager(player = 'Kabib Nurmagabob')
     ret = man.getCards(12)
-    ret.sort(key = lambda x: x[3], reverse = True)
     print(*ret, sep = "\n")
