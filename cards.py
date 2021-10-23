@@ -680,11 +680,11 @@ class CardManager:
         numCards = min(numCards, NUM_CARDS)
 
         if len(cardStack) <= numCards:
-            return [x[1] for x in cardStack]
+            return match_id[0], [x[1] for x in cardStack]
         else:
             cardStack.sort(key = lambda x: x[0], reverse = True)
             cardStack = cardStack[0:numCards]
-            return [x[1] for x in cardStack]
+            return match_id[0], [x[1] for x in cardStack]
 
 if __name__ == '__main__':
     #example usage
