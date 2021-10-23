@@ -11,11 +11,11 @@ discord_api = DiscordAPI(TOKEN)
 last_match_id = man.getCards(5)[0]
 
 def getCardsString(cards):
-    cards.sort(key=lambda x: x[0], reverse=True)
+    cards.sort(key=lambda x: x[3], reverse=True)
 
     string = ''
     for card in cards:
-        string += '{0} - {4} | **{1}** - {2}'.format(*card[1])
+        string += '{0} - {4} | **{1}** - {2}'.format(*card)
         string += '\n'
     return string
 
