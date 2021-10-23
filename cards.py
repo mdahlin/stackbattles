@@ -2,7 +2,7 @@ from re import match
 from leagueapi import LolAPI
 from secrets import API_KEY
 
-NUM_CARDS = 12 #pls update if adding cards
+NUM_CARDS = 14 #pls update if adding cards
 
 class Card:
     """
@@ -45,6 +45,7 @@ class Card:
             pData['damageDealtToTurrets'] = p['damageDealtToTurrets']
             pData['totalMinionsKilled'] = p['totalMinionsKilled']
             pData['timePlayed'] = p['timePlayed']
+            pData['totalHealsOnTeammates'] = p['totalHealsOnTeammates']
 
             if p['perks']['styles'][0]['selections'][0]['perk'] == 8128:
                 pData['DH Damage'] = p['perks']['styles'][0]['selections'][0]['var1']
@@ -340,13 +341,13 @@ class Card:
         statName = "timeCCingOthers"
         winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
         if winner[0] is not None:
-            ccScore = winner[1]
-            scaling = 0 if ccScore < 50 else max(1, min(4, ccScore / 30))
+            ccScore = winner[1] / (winner[0]['timePlayed'] / 60)
+            scaling = 0 if ccScore < 4 else max(1, min(4, ccScore / 3))
 
             ret = []
             ret.append(winner[0]['summonerName'])
             ret.append(cardName)
-            ret.append(f'CC\'ed enemies for {ccScore} seconds')
+            ret.append(f'{ccScore} CC score per minute')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
             return ret
@@ -373,7 +374,7 @@ class Card:
         winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
         if winner[0] is not None:
             goldEarnedPercent = winner[2]*100
-            scaling = 0 if goldEarnedPercent < 25 else max(1, min(4, goldEarnedPercent / 20))
+            scaling = 0 if goldEarnedPercent < 25 else max(1, min(4, goldEarnedPercent / 15))
 
             ret = []
             ret.append(winner[0]['summonerName'])
@@ -479,7 +480,7 @@ class Card:
                 winner = player
             
         damagePercentage = (maxBuildingDamage / teamBuildingDamage) * 100
-        scaling = 0 if damagePercentage < 25 else max(1, min(3, damagePercentage / 15))
+        scaling = 0 if damagePercentage < 25 else max(1, min(3, damagePercentage / 20))
         if winner is not None:
             ret = []
             ret.append(winner['summonerName'])
@@ -559,7 +560,77 @@ class Card:
         else:
             return ["", "", "", 0]
 
+    def getCardKillParticipation(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
 
+        Description: 
+        Least Damage
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+        """
+        cardName = "The Guy"
+        statName = "totalMinionsKilled"
+        winner = None
+        kpWinner = 0
+        teamData = self.goodTeamStats if getCardForGoodTeam else self.badTeamStats
+        teamKills = 0
+        for player in teamData:
+            teamKills += player['kills']
+        
+        for player in teamData:
+            pKP = (player['kills'] + player['assists']) / teamKills
+            if pKP > kpWinner:
+                kpWinner = pKP
+                winner = player
+
+        scaling = 0 if kpWinner < .9 else max(1, min(3, kpWinner / .35))
+        if winner is not None:
+            ret = []
+            ret.append(winner['summonerName'])
+            ret.append(cardName)
+            ret.append(f'{kpWinner*100:.2f}% kill participation.')
+            ret.append(basePriority * scaling)
+            ret.append(winner['championName'])
+            return ret
+
+    def getCardBigHeals(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        Least Damage
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+        """
+        cardName = "Notice me"
+        statName = "totalHealsOnTeammates"
+        winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
+        if winner[0] is not None:
+            healing = winner[1]
+            scaling = 0 if healing < 15000 else max(1, min(4, healing / 10000))
+
+            ret = []
+            ret.append(winner[0]['summonerName'])
+            ret.append(cardName)
+            ret.append(f'Thank me l8er. {healing} healing on teammates')
+            ret.append(basePriority * scaling)
+            ret.append(winner[0]['championName'])
+            return ret
+        else:
+            return ["", "", "", 0]
         #Remaining Card Ideas
         #abilities used
         #objectives stolen
@@ -581,7 +652,7 @@ class CardManager:
         self.region = region
         self.key = apiKey
         if homies is None:
-            homies = ['Mahat Magandalf', 'Dahlin', '4th Migo', 'Kabib Nurmagabob', 'Lacr3188', 'Eminems Sweater', 'GROBGOBGLOBGROD']
+            homies = ['Mahat Magandalf', 'Dahlin', 'Poop in Jort', 'Kabib Nurmagabob', 'Lacr3188', 'Eminems Sweater', 'GROBGOBGLOBGROD']
         self.homies = homies
 
     def getCards(self, numCards = 4):
@@ -620,8 +691,4 @@ if __name__ == '__main__':
     man = CardManager(player = 'Kabib Nurmagabob')
     ret = man.getCards(12)
     ret.sort(key = lambda x: x[3], reverse = True)
-<<<<<<< HEAD
     print(*ret, sep = "\n")
-=======
-    print(*ret, sep = "\n")
->>>>>>> 9eba038ce3eae68887ca60f931f6dce793096464
