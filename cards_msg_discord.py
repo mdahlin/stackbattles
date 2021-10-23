@@ -10,7 +10,6 @@ discord_api = DiscordAPI(TOKEN)
 # initialize
 last_match_id = man.getCards(5)[0]
 
-
 def getCardsString(cards):
     cards.sort(key=lambda x: x[0], reverse=True)
 
@@ -21,13 +20,18 @@ def getCardsString(cards):
     return string
 
 while True:
-    match_id, cards = man.getCards(5)
+    try:
+        print("Checking for new matches")
+        match_id, cards = man.getCards(5)
 
-    if match_id != last_match_id:
+        if match_id != last_match_id:
+            print("New match found")
+            # occasionally request errors, so just keep trying
+            discord_api.sendMessage('894438526580555817', 
+                    {"content": getCardsString(cards)})
 
-        discord_api.sendMessage('894438526580555817', 
-                {"content": getCardsString(cards)})
-
-        last_match_id = match_id
+            last_match_id = match_id
+    except:
+        pass
 
     sleep(30)
