@@ -271,7 +271,7 @@ class Card:
                 winner = dmg
         
         lowestPercent *= 100
-        scaling = 0 if lowestPercent > 25 else min(1, max(3, 25 / lowestPercent))
+        scaling = 0 if lowestPercent > 20 else min(1, max(3, 25 / lowestPercent))
         if winner is not None:
             ret = []
             ret.append(winner['summonerName'])
@@ -480,7 +480,7 @@ class Card:
                 winner = player
             
         damagePercentage = (maxBuildingDamage / teamBuildingDamage) * 100
-        scaling = 0 if damagePercentage < 25 else max(1, min(3, damagePercentage / 20))
+        scaling = 0 if damagePercentage < 75 else max(1, min(3, damagePercentage / 30))
         if winner is not None:
             ret = []
             ret.append(winner['summonerName'])
@@ -686,9 +686,17 @@ class CardManager:
             cardStack = cardStack[0:numCards]
             return match_id[0], [x[1] for x in cardStack]
 
+    def getCardsString(self, cards):
+        cards.sort(key=lambda x: x[3], reverse=True)
+
+        string = ''
+        for card in cards:
+            string += '{0} - {4} | **{1}** - {2}'.format(*card)
+            string += '\n'
+        return string
+
 if __name__ == '__main__':
     #example usage
     man = CardManager(player = 'Kabib Nurmagabob')
-    ret = man.getCards(12)
-    ret.sort(key = lambda x: x[3], reverse = True)
-    print(*ret, sep = "\n")
+    match, cards = man.getCards(12)
+    print(man.getCardsString(cards[0:5]))
