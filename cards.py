@@ -347,7 +347,7 @@ class Card:
             ret = []
             ret.append(winner[0]['summonerName'])
             ret.append(cardName)
-            ret.append(f'{ccScore} CC score per minute')
+            ret.append(f'{ccScore:.2f} CC score per minute')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
             return ret
