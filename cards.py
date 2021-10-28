@@ -2,8 +2,6 @@ from re import match
 from leagueapi import LolAPI
 from secrets import API_KEY
 
-NUM_CARDS = 14 #pls update if adding cards
-
 SQUAD_PUUID = {
         "Dahlin": "t9OAf1XjFsvRN-_-ILbDp1gPifPu6w0_KJho9nrsZAe66MDVhCt3fHl1Bu6v-9gKi3NsExXaZKUzHA",
         "Fey": "J32tRlyYWYCGstSV5Yl9tGScPkh71qxPcs3ww5VWARcp6rwc4WZhsmX8rc93_0BRxPGcqdPArlHksw",
@@ -57,6 +55,9 @@ class Card:
             pData['totalMinionsKilled'] = p['totalMinionsKilled']
             pData['timePlayed'] = p['timePlayed']
             pData['totalHealsOnTeammates'] = p['totalHealsOnTeammates']
+            pData['pentaKills'] = p['pentaKills']
+            pData['firstBloodKill'] = p['firstBloodKill']
+            pData['totalDamageTaken'] = p['totalDamageTaken']
 
             if p['perks']['styles'][0]['selections'][0]['perk'] == 8128:
                 pData['DH Damage'] = p['perks']['styles'][0]['selections'][0]['var1']
@@ -412,7 +413,7 @@ class Card:
             [3] - card priority
             [4] - summoner champion
         """
-        cardName = "Big Deeps"
+        cardName = "The Duke of Damage"
         statName = "totalDamageDealtToChampions"
         winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
         if winner[0] is not None:
@@ -480,7 +481,7 @@ class Card:
         """
         cardName = "Tower Toppler"
         maxBuildingDamage = 0
-        teamBuildingDamage = 0
+        teamBuildingDamage = 1 #Avoid dividing by zero. Yes it really happened.
         winner = None
         teamData = self.goodTeamStats if getCardForGoodTeam else self.badTeamStats
         for player in teamData:
@@ -544,7 +545,7 @@ class Card:
         getCardForGoodTeam : true if get card for homies team, false for enemy team
 
         Description: 
-        Least Damage
+        CS per minute above 9
 
         return a list with format:
             [0] - summoner name
@@ -577,7 +578,7 @@ class Card:
         getCardForGoodTeam : true if get card for homies team, false for enemy team
 
         Description: 
-        Least Damage
+        Kill participation above 90%
 
         return a list with format:
             [0] - summoner name
@@ -587,7 +588,6 @@ class Card:
             [4] - summoner champion
         """
         cardName = "The Guy"
-        statName = "totalMinionsKilled"
         winner = None
         kpWinner = 0
         teamData = self.goodTeamStats if getCardForGoodTeam else self.badTeamStats
@@ -617,7 +617,7 @@ class Card:
         getCardForGoodTeam : true if get card for homies team, false for enemy team
 
         Description: 
-        Least Damage
+        Lots of healing
 
         return a list with format:
             [0] - summoner name
@@ -642,11 +642,114 @@ class Card:
             return ret
         else:
             return ["", "", "", 0]
+
+    def getCardPentakill(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        Got a penta
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+        """
+        cardName = "Pentakill!"
+        statName = "pentaKills"
+        winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
+        if winner[0] is not None and winner[1] > 0:
+            scaling = 3
+
+            ret = []
+            ret.append(winner[0]['summonerName'])
+            ret.append(cardName)
+            ret.append(f'haha die trash')
+            ret.append(basePriority * scaling)
+            ret.append(winner[0]['championName'])
+            return ret
+        else:
+            return ["", "", "", 0]
+
+        
+    def getCardFirstBlood(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        Got a penta
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+        """
+        cardName = "First Blood!"
+        statName = "firstBloodKill"
+        winner = None
+        teamData = self.goodTeamStats if getCardForGoodTeam else self.badTeamStats
+        for player in teamData:
+            if player[statName] == True:
+                winner = player
+        
+        if winner is not None:
+            scaling = 0.5
+
+            ret = []
+            ret.append(winner['summonerName'])
+            ret.append(cardName)
+            ret.append(f'quick pop')
+            ret.append(basePriority * scaling)
+            ret.append(winner['championName'])
+            return ret
+        else:
+            return ["", "", "", 0]
+
+    def getCardBystander(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        Got a penta
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+        """
+        cardName = "Innocent Bystander"
+        statName = "totalDamageDealtToChampions"
+        loserDealt = self.getNPlaceStatWinner(statName, 4, getCardForGoodTeam)
+        statName = "totalDamageTaken"
+        loserTaken = self.getNPlaceStatWinner(statName, 4, getCardForGoodTeam)
+
+        if loserDealt[0]['summonerName'] == loserTaken[0]['summonerName']:
+            scaling = 0.5
+
+            ret = []
+            ret.append(loserDealt[0]['summonerName'])
+            ret.append(cardName)
+            ret.append(f'Least damage dealt ({loserDealt[2] * 100:.2f}% of team) AND least damage taken ({loserTaken[2] * 100:.2f}% of team)')
+            ret.append(basePriority * scaling)
+            ret.append(loserDealt[0]['championName'])
+            return ret
+        else:
+            return ["", "", "", 0]
+        
         #Remaining Card Ideas
         #abilities used
         #objectives stolen
-        #penta kill
         #vision score
+        #zero damage to structures
 
 
 class CardManager:
@@ -686,9 +789,10 @@ class CardManager:
         for i in cardList:                                      #run all card functions
             func = getattr(mCard, i)
             card = func(3, getCardsForGoodTeam)     #3 is default priority for now
-            cardStack.append((card[3], card))
+            if card[3] > 0:
+                cardStack.append((card[3], card))
 
-        numCards = min(numCards, NUM_CARDS)
+        numCards = min(numCards, len(cardList))
 
         if len(cardStack) <= numCards:
             return match_id[0], [x[1] for x in cardStack]
@@ -708,6 +812,6 @@ class CardManager:
 
 if __name__ == '__main__':
     #example usage
-    man = CardManager(player_puuid=SQUAD_PUUID["Kabib Nurmagabob"])
+    man = CardManager(player_puuid=SQUAD_PUUID["Fey"])
     match, cards = man.getCards(12)
     print(man.getCardsString(cards[0:5]))
