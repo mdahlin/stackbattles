@@ -4,6 +4,17 @@ from secrets import API_KEY
 
 NUM_CARDS = 14 #pls update if adding cards
 
+SQUAD_PUUID = {
+        "Dahlin": "t9OAf1XjFsvRN-_-ILbDp1gPifPu6w0_KJho9nrsZAe66MDVhCt3fHl1Bu6v-9gKi3NsExXaZKUzHA",
+        "Fey": "J32tRlyYWYCGstSV5Yl9tGScPkh71qxPcs3ww5VWARcp6rwc4WZhsmX8rc93_0BRxPGcqdPArlHksw",
+        "Gerry": "86xzwMQ5Yy6ZiURZ43r6zh3lFLAylGww_vitKdWueIPUKv8cT0bwwEoMDhF2g6FNCar-7E64HyEVFg",
+        "Sam": "XL05a5R3GFwH-S9fZ23GWmL6CDqR6fUqZXdpXt0Lq9SItHuBVf0a9CtuWStkLFmGMjTAP6rbJSjWbw",
+        "Micky": "dt_IdbEDHTu6PknDNU1O2pyZ0onzdocgHdlMFxlnS_f7ivTk2sPPnE86Nq2QmUO4cylPNQlKsX1cqQ",
+        "Bently": "pULUbze4JrO3DfCfzt3S6OOOR6B30M-L6FxYmYvmmGWPLfdnocfZgyCTj1wIFsRYEw8xqM7ueHU4RA",
+        "Colt": "cSaofF6nFtyJLzS3-q9EBfsgUlgjuTmKYReNZwKlVUdKpPt3YikfC8Oeta8rI8X0Vagwk_RM6ROJLw"
+        }
+
+
 class Card:
     """
     Base class for card
@@ -644,22 +655,22 @@ class CardManager:
     Initialize with player name for cards
     Call getCards
     """
-    def __init__(self, player = "Kabib Nurmagabob", region = "NA1", apiKey = API_KEY, homies = None):
+    def __init__(self, player_puuid = SQUAD_PUUID["Fey"],
+            apiKey = API_KEY, homies_puuid = None):
         """
         Initialize with desired player, region, and if possible, API Key
         """
-        self.player = player
-        self.region = region
+        self.player_puuid = player_puuid
         self.key = apiKey
-        if homies is None:
-            homies = ['Mahat Magandalf', 'Dahlin', 'Poop in Jort', 'Kabib Nurmagabob', 'Lacr3188', 'Eminems Sweater', 'GROBGOBGLOBGROD']
-        self.homies = homies
+        if homies_puuid is None:
+            homies_puuid = list(SQUAD_PUUID.values())
+        self.homies = homies_puuid
 
     def getCards(self, numCards = 4):
         api = LolAPI(self.key, 'americas')
 
-        homies_puuid = [api.getPUUID(homie, self.region) for homie in self.homies]
-        puuid = api.getPUUID(self.player, self.region)          #get puuid of player of interest
+        homies_puuid = self.homies
+        puuid = self.player_puuid
         match_id = api.getMatchIdList(puuid, 1)                 #get match data of last match
         match = api.getMatchInfo(match_id[0])
 
@@ -697,6 +708,6 @@ class CardManager:
 
 if __name__ == '__main__':
     #example usage
-    man = CardManager(player = 'Kabib Nurmagabob')
+    man = CardManager(player_puuid=SQUAD_PUUID["Kabib Nurmagabob"])
     match, cards = man.getCards(12)
     print(man.getCardsString(cards[0:5]))

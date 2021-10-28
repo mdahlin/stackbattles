@@ -2,10 +2,10 @@ from time import sleep
 
 
 from secrets import API_KEY, TOKEN
-from cards import CardManager
+from cards import CardManager, SQUAD_PUUID
 from discordapi import DiscordAPI
 
-man = CardManager(player='Dahlin')
+man = CardManager(player_puuid=SQUAD_PUUID["Dahlin"])
 discord_api = DiscordAPI(TOKEN)
 # initialize
 last_match_id = man.getCards(5)[0]
