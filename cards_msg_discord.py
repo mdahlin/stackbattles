@@ -5,11 +5,11 @@ from secrets import API_KEY, TOKEN
 from cards import CardManager, SQUAD_PUUID
 from discordapi import DiscordAPI
 
-man = CardManager(player_puuid=SQUAD_PUUID["Dahlin"])
+man = CardManager(player_puuid=SQUAD_PUUID["Fey"])
 discord_api = DiscordAPI(TOKEN)
 # initialize
 CHANNEL_ID = '894438526580555817'
-last_match_id = man.getCards(5)[0]
+old_matches = man.getLastNMatchIds(10)
 last_message_id = discord_api.getChannelMessages(CHANNEL_ID, {"limit": 1})[0]["id"]
 
 def getCardsString(cards):
@@ -18,6 +18,15 @@ def getCardsString(cards):
     string = ''
     for card in cards:
         string += '{0} - {4} | **{1}** - {2}'.format(*card)
+        string += '\n'
+    return string
+
+def getLeaderboardString(leaderboard):
+    string = ''
+    for stat in leaderboard:
+        cardname = list(stat)[0]
+        data = stat[cardname]
+        string += '**{0}**: {1} with {2:.2f} as {3}'.format(cardname, data['playername'], data['statvalue'], data['playerchampion'])
         string += '\n'
     return string
 
@@ -35,12 +44,11 @@ while True:
         print("Checking for new matches")
         match_id, cards = man.getCards(5)
 
-        if match_id != last_match_id:
+        if match_id not in old_matches:
             print("New match found")
             # occasionally request errors, so just keep trying
             discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards)})
-
-            last_match_id = match_id
+            old_matches.append(match_id)
 
         print("Checking for keyword")
         discord_messages = discord_api.getChannelMessages(CHANNEL_ID,
@@ -48,7 +56,9 @@ while True:
 
         if checkDiscordMessages(discord_messages, "!leaderboard"):
             print("Keyword match found")
-            discord_api.sendMessage(CHANNEL_ID, {"content": "on you foof"})
+            leaderboard = man.getLeaderboard()
+            highscores = getLeaderboardString(leaderboard)
+            discord_api.sendMessage(CHANNEL_ID, {"content": highscores})
 
         if discord_messages:  # if list is not empty, update last  message
             last_message_id = discord_messages[0]["id"]  # first element is latest

@@ -2,6 +2,10 @@ from re import match
 from leagueapi import LolAPI
 from secrets import API_KEY
 
+import json
+import os.path
+from os import path
+
 SQUAD_PUUID = {
         "Dahlin": "t9OAf1XjFsvRN-_-ILbDp1gPifPu6w0_KJho9nrsZAe66MDVhCt3fHl1Bu6v-9gKi3NsExXaZKUzHA",
         "Fey": "J32tRlyYWYCGstSV5Yl9tGScPkh71qxPcs3ww5VWARcp6rwc4WZhsmX8rc93_0BRxPGcqdPArlHksw",
@@ -12,6 +16,7 @@ SQUAD_PUUID = {
         "Colt": "cSaofF6nFtyJLzS3-q9EBfsgUlgjuTmKYReNZwKlVUdKpPt3YikfC8Oeta8rI8X0Vagwk_RM6ROJLw"
         }
 
+LEADERBOARD_FILENAME = "highscores.json"
 
 class Card:
     """
@@ -147,6 +152,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
 
         cardName = "Stack Champion"
@@ -173,9 +179,10 @@ class Card:
             ret.append(str(winner[1]) + " stacks. (+" + str(dif) + ")")
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
+            ret.append(winner[1])
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
     def getCardTankmaster(self, basePriority, getCardForGoodTeam = True):
         """
@@ -193,6 +200,7 @@ class Card:
             [2] - card text
             [3] - card priority 
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
             
         cardName = "IM THE TANK"
@@ -208,9 +216,10 @@ class Card:
             ret.append(f'{winner[1]} mitigated damage. {percentMitigated:.2f}% of teams total mitigated damage')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
+            ret.append(winner[1])
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
     def getCardTrueDamage(self, basePriority, getCardForGoodTeam = True):
         """
@@ -228,6 +237,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
 
         cardName = "No counterplay"
@@ -251,9 +261,10 @@ class Card:
             ret.append(f'{highestPercent:.2f}% of damage dealt as true damage')
             ret.append(basePriority * scaling)
             ret.append(winner['championName'])
+            ret.append(highestPercent)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
         
     def getCardPvE(self, basePriority, getCardForGoodTeam = True):
         """
@@ -271,6 +282,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "The PvE Player"
         lowestPercent = 1
@@ -291,9 +303,10 @@ class Card:
             ret.append(f'Only {lowestPercent:.2f}% of total damage dealt to champions')
             ret.append(basePriority * scaling)
             ret.append(winner['championName'])
+            ret.append(lowestPercent)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
     def getCardFeedingWeenie(self, basePriority, getCardForGoodTeam = True):
         """
@@ -309,6 +322,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "The Feeding Weenie"
         maxDeathDiff = 0
@@ -330,9 +344,10 @@ class Card:
             ret.append(f'{deaths} deaths all for only {kills} kills. WEENIE')
             ret.append(basePriority * scaling)
             ret.append(winner['championName'])
+            ret.append(maxDeathDiff)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
     def getCardCCLord(self, basePriority, getCardForGoodTeam = True):
         """
@@ -348,6 +363,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "The CC Lord"
         statName = "timeCCingOthers"
@@ -362,9 +378,10 @@ class Card:
             ret.append(f'{ccScore:.2f} CC score per minute')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
+            ret.append(ccScore)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
     def getCardMoneySpender(self, basePriority, getCardForGoodTeam = True):
         """
@@ -380,6 +397,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "Big Money"
         statName = "goldEarned"
@@ -394,9 +412,10 @@ class Card:
             ret.append(f'Earned {goldEarnedPercent:.2f}% of the teams gold')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
+            ret.append(goldEarnedPercent)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
     def getCardBigDeeps(self, basePriority, getCardForGoodTeam = True):
         """
@@ -412,6 +431,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "The Duke of Damage"
         statName = "totalDamageDealtToChampions"
@@ -426,9 +446,10 @@ class Card:
             ret.append(f'Dealt {damagePercent:.2f}% of the teams damage')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
+            ret.append(damagePercent)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
 
     def getCardBigCrit(self, basePriority, getCardForGoodTeam = True):
@@ -445,6 +466,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "Crit King"
         statName = "largestCriticalStrike"
@@ -459,9 +481,10 @@ class Card:
             ret.append(f'Biggest crit: {biggestCrit}')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
+            ret.append(biggestCrit)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
 
     def getCardObjectivePlayer(self, basePriority, getCardForGoodTeam = True):
@@ -478,6 +501,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "Tower Toppler"
         maxBuildingDamage = 0
@@ -500,9 +524,10 @@ class Card:
             ret.append(f'Dealt {damagePercentage:.2f}% of the teams damage to structures')
             ret.append(basePriority * scaling)
             ret.append(winner['championName'])
+            ret.append(damagePercentage)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
     def getCardNoDamage(self, basePriority, getCardForGoodTeam = True):
         """
@@ -518,6 +543,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "I did no dAmage!"
         statName = "totalDamageDealtToChampions"
@@ -535,9 +561,10 @@ class Card:
             ret.append(f'Only {noDamage} damage. ({noDamagePercent:.2f}% of teams damage. noob)')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
+            ret.append(noDamagePercent)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
     def getCardCSWinner(self, basePriority, getCardForGoodTeam = True):
         """
@@ -553,6 +580,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "Farming Queen"
         statName = "totalMinionsKilled"
@@ -568,9 +596,10 @@ class Card:
             ret.append(f'Clean farm bro. {csPerMin:.2f} cs per minute')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
+            ret.append(csPerMin)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
     def getCardKillParticipation(self, basePriority, getCardForGoodTeam = True):
         """
@@ -586,6 +615,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "The Guy"
         winner = None
@@ -609,7 +639,10 @@ class Card:
             ret.append(f'{kpWinner*100:.2f}% kill participation.')
             ret.append(basePriority * scaling)
             ret.append(winner['championName'])
+            ret.append(kpWinner)
             return ret
+        else:
+            return ["", cardName, "", 0, "", 0]
 
     def getCardBigHeals(self, basePriority, getCardForGoodTeam = True):
         """
@@ -625,6 +658,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "Notice me"
         statName = "totalHealsOnTeammates"
@@ -639,9 +673,10 @@ class Card:
             ret.append(f'Thank me l8er. {healing} healing on teammates')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
+            ret.append(healing)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
     def getCardPentakill(self, basePriority, getCardForGoodTeam = True):
         """
@@ -657,6 +692,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "Pentakill!"
         statName = "pentaKills"
@@ -670,9 +706,10 @@ class Card:
             ret.append(f'haha die trash')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
+            ret.append(winner[1])
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
         
     def getCardFirstBlood(self, basePriority, getCardForGoodTeam = True):
@@ -689,6 +726,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "First Blood!"
         statName = "firstBloodKill"
@@ -707,9 +745,10 @@ class Card:
             ret.append(f'quick pop')
             ret.append(basePriority * scaling)
             ret.append(winner['championName'])
+            ret.append(1)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
 
     def getCardBystander(self, basePriority, getCardForGoodTeam = True):
         """
@@ -725,6 +764,7 @@ class Card:
             [2] - card text
             [3] - card priority
             [4] - summoner champion
+            [5] - winning statistic for leaderboard
         """
         cardName = "Innocent Bystander"
         statName = "totalDamageDealtToChampions"
@@ -741,9 +781,10 @@ class Card:
             ret.append(f'Least damage dealt ({loserDealt[2] * 100:.2f}% of team) AND least damage taken ({loserTaken[2] * 100:.2f}% of team)')
             ret.append(basePriority * scaling)
             ret.append(loserDealt[0]['championName'])
+            ret.append(loserTaken[2]*100 + loserDealt[2]*100)
             return ret
         else:
-            return ["", "", "", 0]
+            return ["", cardName, "", 0, "", 0]
         
         #Remaining Card Ideas
         #abilities used
@@ -768,7 +809,69 @@ class CardManager:
         if homies_puuid is None:
             homies_puuid = list(SQUAD_PUUID.values())
         self.homies = homies_puuid
+        self.leaderboard = {}
 
+    #need to refactor all the leaderboard disgusting nonsense
+    def readLeaderboard(self):
+        with open(LEADERBOARD_FILENAME) as json_file:
+            highscores = json.load(json_file)
+            self.leaderboard = highscores['cards']
+
+    def initLeaderboard(self, cardlist):
+        data = {}
+        data['cards'] = []
+        for card in cardlist:
+            data['cards'].append({
+                card[1][1] : {
+                'playername' : card[1][0],
+                'playerchampion' : card[1][4],
+                'statvalue' : card[1][5]
+                }
+            })
+        with open(LEADERBOARD_FILENAME, 'w') as outfile:
+            json.dump(data, outfile)
+    
+    def updateLeaderboard(self, cardlist):
+        for stat in self.leaderboard:
+            for card in cardlist:
+                cardname = card[1][1]
+                data = stat.get(cardname)
+                if data is not None:
+                    if cardname == "The PvE Player" or "I did no dAmage!" or "Innocent Bystander":
+                        if stat[cardname]['statvalue'] > card[1][5]:
+                            stat[cardname]['playername'] = card[1][0]
+                            stat[cardname]['playerchampion'] = card[1][4]
+                            stat[cardname]['statvalue'] = card[1][5]
+                    else:
+                        if stat[cardname]['statvalue'] < card[1][5]:
+                            stat[cardname]['playername'] = card[1][0]
+                            stat[cardname]['playerchampion'] = card[1][4]
+                            stat[cardname]['statvalue'] = card[1][5]
+            
+
+    def writeLeaderboard(self):
+        data = {}
+        data['cards'] = []
+        for p in self.leaderboard:
+            cardname = list(p)[0]
+            data['cards'].append({
+                cardname : {
+                'playername' : p[cardname]['playername'],
+                'playerchampion' : p[cardname]['playerchampion'],
+                'statvalue' : p[cardname]['statvalue']
+            }})
+        with open(LEADERBOARD_FILENAME, 'w') as outfile:
+            json.dump(data, outfile)
+
+    def getLeaderboard(self):
+        return self.leaderboard
+    
+    def getLastNMatchIds(self, N):
+        api = LolAPI(self.key, 'americas')
+        puuid = self.player_puuid
+        match_ids = api.getMatchIdList(puuid, N)
+        return match_ids
+            
     def getCards(self, numCards = 4):
         api = LolAPI(self.key, 'americas')
 
@@ -785,12 +888,25 @@ class CardManager:
         cardList = dir(mCard)                                   #get all functions in card class
         cardList[:] = [x for x in cardList if "getCard" in x]   #keep functions with getCard in the name, as these are card functions
         getCardsForGoodTeam = True
+        needLeaderboardInit = not path.exists(LEADERBOARD_FILENAME)
 
         for i in cardList:                                      #run all card functions
             func = getattr(mCard, i)
             card = func(3, getCardsForGoodTeam)     #3 is default priority for now
-            if card[3] > 0:
+            if card[3] > 0 or needLeaderboardInit:
                 cardStack.append((card[3], card))
+
+        if needLeaderboardInit:
+            self.initLeaderboard(cardStack)
+            for card in cardStack:
+                if card[1][3] == 0:
+                    del card
+        else:
+            self.readLeaderboard()
+            self.updateLeaderboard(cardStack)
+            self.writeLeaderboard()
+
+
 
         numCards = min(numCards, len(cardList))
 
