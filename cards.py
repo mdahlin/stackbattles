@@ -837,16 +837,18 @@ class CardManager:
                 cardname = card[1][1]
                 data = stat.get(cardname)
                 if data is not None:
-                    if cardname == "The PvE Player" or "I did no dAmage!" or "Innocent Bystander":
+                    if cardname == "The PvE Player" or cardname == "I did no dAmage!" or cardname == "Innocent Bystander":
                         if stat[cardname]['statvalue'] > card[1][5]:
                             stat[cardname]['playername'] = card[1][0]
                             stat[cardname]['playerchampion'] = card[1][4]
                             stat[cardname]['statvalue'] = card[1][5]
+                            card[1][2] += " - New Highscore!"
                     else:
                         if stat[cardname]['statvalue'] < card[1][5]:
                             stat[cardname]['playername'] = card[1][0]
                             stat[cardname]['playerchampion'] = card[1][4]
                             stat[cardname]['statvalue'] = card[1][5]
+                            card[1][2] += " - New Highscore!"
             
 
     def writeLeaderboard(self):
