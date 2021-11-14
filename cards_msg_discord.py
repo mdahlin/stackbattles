@@ -2,15 +2,28 @@ from time import sleep
 
 
 from secrets import API_KEY, TOKEN
-from cards import CardManager, SQUAD_PUUID
+from leagueapi import  LolAPI
 from discordapi import DiscordAPI
+from cards import CardManager, SQUAD_PUUID
 
-man = CardManager(player_puuid=SQUAD_PUUID["Fey"])
+
 discord_api = DiscordAPI(TOKEN)
-# initialize
 CHANNEL_ID = '894438526580555817'
-old_matches = man.getLastNMatchIds(10)
 last_message_id = discord_api.getChannelMessages(CHANNEL_ID, {"limit": 1})[0]["id"]
+
+# manager to make the getCards call
+man = CardManager(player_puuid=SQUAD_PUUID["Dahlin"])
+
+def getLastNMatchIds(puuids: list, n_matches: int, api: LolAPI) -> set:
+    match_ids = [api.getMatchIdList(puuid, n_matches)
+                 for puuid in puuids]
+    # flatten out list and turn into a set
+    match_ids = set([match_id for sublist in match_ids
+                     for match_id in sublist])
+    return match_ids
+
+lol_api = LolAPI(API_KEY, "americas")
+old_matches = getLastNMatchIds(SQUAD_PUUID.values(), 10, lol_api)
 
 def getCardsString(cards):
     cards.sort(key=lambda x: x[3], reverse=True)
@@ -41,14 +54,20 @@ def checkDiscordMessages(messages_json: list, keyword: str) -> bool:
 
 while True:
     try:
+        # occasionally request errors, so just keep trying
         print("Checking for new matches")
-        match_id, cards = man.getCards(5)
+        new_matches = getLastNMatchIds(SQUAD_PUUID.values(), 1, lol_api)
 
-        if match_id not in old_matches:
+
+        if len(old_matches | new_matches) > len(old_matches):
             print("New match found")
-            # occasionally request errors, so just keep trying
+            # first element of new_matches in case two different
+            # matches finish at the same time
+            match_id = list(new_matches - old_matches)[0]
+            cards = man.getCards(match_id, 5)
             discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards)})
-            old_matches.append(match_id)
+            # update old matches to include the latest match printed
+            old_matches.add(match_id)
 
         print("Checking for keyword")
         discord_messages = discord_api.getChannelMessages(CHANNEL_ID,

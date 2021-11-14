@@ -869,18 +869,17 @@ class CardManager:
         return self.leaderboard
     
     def getLastNMatchIds(self, N):
+        # not used anymore after other changes
         api = LolAPI(self.key, 'americas')
         puuid = self.player_puuid
         match_ids = api.getMatchIdList(puuid, N)
         return match_ids
             
-    def getCards(self, numCards = 4):
+    def getCards(self, match_id, numCards=4):
         api = LolAPI(self.key, 'americas')
 
         homies_puuid = self.homies
-        puuid = self.player_puuid
-        match_id = api.getMatchIdList(puuid, 1)                 #get match data of last match
-        match = api.getMatchInfo(match_id[0])
+        match = api.getMatchInfo(match_id)
 
         mCard = Card(match, homies_puuid)                       #create card object
         mCard.parseJson()
@@ -913,11 +912,11 @@ class CardManager:
         numCards = min(numCards, len(cardList))
 
         if len(cardStack) <= numCards:
-            return match_id[0], [x[1] for x in cardStack]
+            return [x[1] for x in cardStack]
         else:
             cardStack.sort(key = lambda x: x[0], reverse = True)
             cardStack = cardStack[0:numCards]
-            return match_id[0], [x[1] for x in cardStack]
+            return [x[1] for x in cardStack]
 
     def getCardsString(self, cards):
         cards.sort(key=lambda x: x[3], reverse=True)
