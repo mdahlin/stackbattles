@@ -70,6 +70,13 @@ class Card:
             else:
                 pData['DH Stacks'] = None
                 pData['DH Damage'] = None 
+
+            if p['perks']['styles'][0]['selections'][0]['perk'] == 8369:
+                pData['FS Damage'] = p['perks']['styles'][0]['selections'][0]['var1']
+                pData['FS Gold'] = p['perks']['styles'][0]['selections'][0]['var2']
+            else:
+                pData['FS Damage'] = None
+                pData['FS Gold'] = None
             self.gameStats.append(pData)
 
     def splitTeamData(self):
@@ -177,6 +184,45 @@ class Card:
             ret.append(winner[0]['summonerName'])
             ret.append(cardName)
             ret.append(str(winner[1]) + " stacks. (+" + str(dif) + ")")
+            ret.append(basePriority * scaling)
+            ret.append(winner[0]['championName'])
+            ret.append(winner[1])
+            return ret
+        else:
+            return ["", cardName, "", 0, "", 0]
+
+    def getCardFirstStrike(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description:
+        Get the player with the most money gained form First Strike
+        Scale priority based off of difference between winner and second place
+        Return priority 0 if no winner
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+            [5] - winning statistic for leaderboard
+        """
+
+        cardName = "Money Maker"
+        winner = self.getNPlaceStatWinner("FS Gold", 0, getCardForGoodTeam)
+
+        if winner[0] is not None:
+            money = winner[1]
+            scaling = 0 if winner[1] < 300 else max(1, min(4, money / 600))
+            if self.matchJson['info']['gameMode'] == 'ARAM':        #always show stack card in aram
+                scaling = 100
+
+            ret = []
+            ret.append(winner[0]['summonerName'])
+            ret.append(cardName)
+            ret.append(str(winner[1]) + " First Stike gold.")
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
             ret.append(winner[1])
