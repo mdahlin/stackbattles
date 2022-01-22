@@ -31,6 +31,8 @@ def getCardsString(cards):
     string = ''
     for card in cards:
         string += '{0} - {4} | **{1}** - {2}'.format(*card)
+        if cards[1] == "The PvE Player":
+            string += "Shoutout urgot!"
         string += '\n'
     return string
 
@@ -57,7 +59,7 @@ while True:
         # occasionally request errors, so just keep trying
         print("Checking for new matches")
         new_matches = getLastNMatchIds(SQUAD_PUUID.values(), 1, lol_api)
-
+        #old_matches.remove(list(new_matches)[0])
 
         if len(old_matches | new_matches) > len(old_matches):
             print("New match found")

@@ -71,6 +71,12 @@ class Card:
                 pData['DH Stacks'] = None
                 pData['DH Damage'] = None 
 
+            if p['perks']['styles'][0]['selections'][0]['perk'] == 8351:
+                pData['Glacial Reduced'] = p['perks']['styles'][0]['selections'][0]['var2']
+            else:
+                pData['DH Stacks'] = None
+                pData['DH Damage'] = None 
+
             if p['perks']['styles'][0]['selections'][0]['perk'] == 8369:
                 pData['FS Damage'] = p['perks']['styles'][0]['selections'][0]['var1']
                 pData['FS Gold'] = p['perks']['styles'][0]['selections'][0]['var2']
@@ -187,6 +193,55 @@ class Card:
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
             ret.append(winner[1])
+            return ret
+        else:
+            return ["", cardName, "", 0, "", 0]
+
+    def getCardGlacial(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        Get the player with the most Dark Harvest stacks.
+        Scale priority based off of difference between stack winner and second place
+        Return priority 0 if no winner
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+            [5] - winning statistic for leaderboard
+        """
+
+        cardName = "Sauce Master"
+        statName = 'Glacial Reduced'
+
+        winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
+        second = self.getNPlaceStatWinner(statName, 1, getCardForGoodTeam)
+  
+        if winner[0] is not None:
+            dif = winner[1] - second[1]
+            if dif == 0:
+                if winner[0]['totalDamageDealtToChampions'] < second[0]['totalDamageDealtToChampions']:
+                    t = winner
+                    winner = second
+                    second = t
+                    
+            scaling = max(1, min(3, dif / max(10, winner[1]))) if winner[1] > 0 else 0
+            if self.matchJson['info']['gameMode'] == 'ARAM':        #always show stack card in aram
+                scaling = 100
+
+            ret = []
+            ret.append(winner[0]['summonerName'])
+            ret.append(cardName)
+            ret.append(str(winner[1]) + " stacks. (+" + str(dif) + ")")
+            ret.append(basePriority * scaling)
+            ret.append(winner[0]['championName'])
+            ret.append(winner[1])
+            print(ret)
             return ret
         else:
             return ["", cardName, "", 0, "", 0]
@@ -561,7 +616,7 @@ class Card:
                 maxBuildingDamage = pBuildingDamage
                 winner = player
             
-        damagePercentage = (maxBuildingDamage / teamBuildingDamage) * 100
+        damagePercentage = ((maxBuildingDamage + 1) / teamBuildingDamage) * 100
         scaling = 0 if damagePercentage < 75 else max(1, min(3, damagePercentage / 30))
         if winner is not None:
             ret = []
