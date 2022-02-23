@@ -59,7 +59,6 @@ while True:
         # occasionally request errors, so just keep trying
         print("Checking for new matches")
         new_matches = getLastNMatchIds(SQUAD_PUUID.values(), 1, lol_api)
-        #old_matches.remove(list(new_matches)[0])
 
         if len(old_matches | new_matches) > len(old_matches):
             print("New match found")
@@ -80,6 +79,13 @@ while True:
             leaderboard = man.getLeaderboard()
             highscores = getLeaderboardString(leaderboard)
             discord_api.sendMessage(CHANNEL_ID, {"content": highscores})
+
+        if checkDiscordMessages(discord_messages, "!lastgame"):
+            last_matches = [lol_api.getMatchIdList(puuid, 1)
+                for puuid in SQUAD_PUUID.values()]
+            last_match = max(last_matches)
+            cards = man.getCards(last_match[0], 5)
+            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards)})
 
         if discord_messages:  # if list is not empty, update last  message
             last_message_id = discord_messages[0]["id"]  # first element is latest

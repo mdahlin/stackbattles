@@ -60,9 +60,11 @@ class Card:
             pData['totalMinionsKilled'] = p['totalMinionsKilled']
             pData['timePlayed'] = p['timePlayed']
             pData['totalHealsOnTeammates'] = p['totalHealsOnTeammates']
+            pData['totalDamageShieldedOnTeammates'] = p['totalDamageShieldedOnTeammates']
             pData['pentaKills'] = p['pentaKills']
             pData['firstBloodKill'] = p['firstBloodKill']
             pData['totalDamageTaken'] = p['totalDamageTaken']
+            pData["neutralMinionsKilled"] = p['neutralMinionsKilled']
 
             if p['perks']['styles'][0]['selections'][0]['perk'] == 8128:
                 pData['DH Damage'] = p['perks']['styles'][0]['selections'][0]['var1']
@@ -74,8 +76,7 @@ class Card:
             if p['perks']['styles'][0]['selections'][0]['perk'] == 8351:
                 pData['Glacial Reduced'] = p['perks']['styles'][0]['selections'][0]['var2']
             else:
-                pData['DH Stacks'] = None
-                pData['DH Damage'] = None 
+                pData['Glacial Reduced'] = None
 
             if p['perks']['styles'][0]['selections'][0]['perk'] == 8369:
                 pData['FS Damage'] = p['perks']['styles'][0]['selections'][0]['var1']
@@ -230,18 +231,17 @@ class Card:
                     winner = second
                     second = t
                     
-            scaling = max(1, min(3, dif / max(10, winner[1]))) if winner[1] > 0 else 0
+            scaling = max(1, min(3, dif / max(1000, winner[1]))) if winner[1] > 0 else 0
             if self.matchJson['info']['gameMode'] == 'ARAM':        #always show stack card in aram
                 scaling = 100
 
             ret = []
             ret.append(winner[0]['summonerName'])
             ret.append(cardName)
-            ret.append(str(winner[1]) + " stacks. (+" + str(dif) + ")")
+            ret.append(str(winner[1]) + " damage reduced. (+" + str(dif) + ")")
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
             ret.append(winner[1])
-            print(ret)
             return ret
         else:
             return ["", cardName, "", 0, "", 0]
@@ -653,7 +653,7 @@ class Card:
             noDamage = winner[1]
             noDamagePercent = winner[2] * 100
             scaling = 0 if noDamagePercent > 14 else max(1, min(4, 10 / max(1, noDamagePercent)))
-            if(winner[0]['summonerName'] == "4th Migo"):
+            if(winner[0]['summonerName'] == "Julia Roberts"):
                 scaling = 100
 
             ret = []
@@ -688,7 +688,7 @@ class Card:
         winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
         if winner[0] is not None:
             minPlayed = winner[0]['timePlayed'] / 60
-            csPerMin = winner[1] / minPlayed
+            csPerMin = (winner[1] + winner[0]['neutralMinionsKilled']) / minPlayed
             scaling = 0 if csPerMin < 9 else max(1, min(4, csPerMin / 5))
 
             ret = []
@@ -763,10 +763,11 @@ class Card:
         """
         cardName = "Notice me"
         statName = "totalHealsOnTeammates"
+        statName2 = "totalDamageShieldedOnTeammates"
         winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
         if winner[0] is not None:
-            healing = winner[1]
-            scaling = 0 if healing < 15000 else max(1, min(4, healing / 10000))
+            healing = winner[1] + winner[0]['totalDamageShieldedOnTeammates']
+            scaling = 0 if healing < 10000 else max(1, min(4, healing / 10000))
 
             ret = []
             ret.append(winner[0]['summonerName'])
@@ -893,6 +894,17 @@ class Card:
         #vision score
         #zero damage to structures
 
+def getLastNMatchIds(puuids: list, n_matches: int, api: LolAPI) -> set:
+    match_ids = [api.getMatchIdList(puuid, n_matches)
+                 for puuid in puuids]
+    # flatten out list and turn into a set
+    match_ids = set([match_id for sublist in match_ids
+                     for match_id in sublist])
+    return match_ids
+
+lol_api = LolAPI(API_KEY, "americas")
+old_matches = getLastNMatchIds(SQUAD_PUUID.values(), 10, lol_api)
+
 
 class CardManager:
     """
@@ -982,7 +994,7 @@ class CardManager:
         homies_puuid = self.homies
         match = api.getMatchInfo(match_id)
 
-        mCard = Card(match, homies_puuid)                       #create card object
+        mCard = Card(match, homies_puuid)                       #create card object 
         mCard.parseJson()
         mCard.splitTeamData()
 
@@ -1031,5 +1043,7 @@ class CardManager:
 if __name__ == '__main__':
     #example usage
     man = CardManager(player_puuid=SQUAD_PUUID["Fey"])
-    match, cards = man.getCards(12)
-    print(man.getCardsString(cards[0:5]))
+    last_matches = [lol_api.getMatchIdList(puuid, 1)
+    for puuid in SQUAD_PUUID.values()]
+    last_match = max(last_matches)
+    cards = man.getCards(last_match[0], 5)
