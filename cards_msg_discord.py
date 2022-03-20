@@ -5,11 +5,13 @@ from secrets import API_KEY, TOKEN
 from leagueapi import  LolAPI
 from discordapi import DiscordAPI
 from cards import CardManager, SQUAD_PUUID
+from card_counts import updateMessageData, getCardCountString, makeMessageData
 
 
 discord_api = DiscordAPI(TOKEN)
 CHANNEL_ID = '894438526580555817'
 last_message_id = discord_api.getChannelMessages(CHANNEL_ID, {"limit": 1})[0]["id"]
+makeMessageData(discord_api, CHANNEL_ID)
 
 # manager to make the getCards call
 man = CardManager(player_puuid=SQUAD_PUUID["Dahlin"])
@@ -86,6 +88,10 @@ while True:
             last_match = max(last_matches)
             cards = man.getCards(last_match[0], 5)
             discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards)})
+
+        if checkDiscordMessages(discord_messages, "!counts"):
+            updateMessageData(discord_api, CHANNEL_ID)
+            discord_api.sendMessage(CHANNEL_ID, {"content": getCardCountString()})
 
         if discord_messages:  # if list is not empty, update last  message
             last_message_id = discord_messages[0]["id"]  # first element is latest

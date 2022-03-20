@@ -18,12 +18,15 @@ class DiscordAPI:
                       data=body, headers=self.headers)
         return None
 
-    def getChannelMessages(self, channel_id: str, params: dict = {}) -> list:
+    def getChannelMessages(self, channel_id: str, params: dict = {}, json=True) -> list:
         """valid params are `around`, `before`, `after`, `limit`"""
         base_path = self.endpoint + f'/channels/{channel_id}/messages'
         path = self._expandPathToUrl(base_path, params)
         res = requests.get(path, headers=self.headers)
-        return res.json()
+        if json:
+            return res.json()
+        else:
+            return res
 
 if __name__ == "__main__":
     from secrets import TOKEN
