@@ -82,6 +82,7 @@ def getCardCountString():
             "TheScaryDoor123": "Steve",
             "Frumpy Dumpster": "Sam",
             "GR0BG0BGL0BGR0D": "Sam",
+            "JTD and FTH": "Sam",
             "PHpremiumm": "Calvin"
             }
     parsed_cards = []

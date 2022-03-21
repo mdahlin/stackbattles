@@ -317,7 +317,7 @@ class Card:
             ret.append(f'{winner[1]} mitigated damage. {percentMitigated:.2f}% of teams total mitigated damage')
             ret.append(basePriority * scaling)
             ret.append(winner[0]['championName'])
-            ret.append(winner[1])
+            ret.append(percentMitigated)
             return ret
         else:
             return ["", cardName, "", 0, "", 0]
@@ -653,8 +653,6 @@ class Card:
             noDamage = winner[1]
             noDamagePercent = winner[2] * 100
             scaling = 0 if noDamagePercent > 14 else max(1, min(4, 10 / max(1, noDamagePercent)))
-            if(winner[0]['summonerName'] == "Julia Roberts"):
-                scaling = 100
 
             ret = []
             ret.append(winner[0]['summonerName'])
@@ -887,6 +885,43 @@ class Card:
             return ret
         else:
             return ["", cardName, "", 0, "", 0]
+
+    def getCardMostKills(self, basePriority, getCardForGoodTeam = True):
+        """
+        basePriority : initial priority value to be scaled by card data
+        getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+        Description: 
+        Got a penta
+
+        return a list with format:
+            [0] - summoner name
+            [1] - card name
+            [2] - card text
+            [3] - card priority
+            [4] - summoner champion
+            [5] - winning statistic for leaderboard
+        """
+        cardName = "Killtacular"
+        statName = "kills"
+        winner = None
+        winner = self.getNPlaceStatWinner(statName, 0, getCardForGoodTeam)
+
+        if winner is not None:
+            ret = []
+            deaths = winner[0]['deaths']
+            assists = winner[0]['assists']
+            kills = winner[1]
+            scaling = 0 if kills < 25 else max(3, kills / 6)
+            ret.append(winner[0]['summonerName'])
+            ret.append(cardName)
+            ret.append(f'{kills} kills at ({winner[1]}/{deaths}/{assists})')
+            ret.append(basePriority * scaling)
+            ret.append(winner[0]['championName'])
+            ret.append(winner[0])
+            return ret
+        else:
+            return ["", cardName, "", 0, "", 0]
         
         #Remaining Card Ideas
         #abilities used
@@ -988,7 +1023,7 @@ class CardManager:
         match_ids = api.getMatchIdList(puuid, N)
         return match_ids
             
-    def getCards(self, match_id, numCards=4):
+    def getCards(self, match_id, numCards=4, enemyTeam = False):
         api = LolAPI(self.key, 'americas')
 
         homies_puuid = self.homies
@@ -1001,14 +1036,17 @@ class CardManager:
         cardStack = []
         cardList = dir(mCard)                                   #get all functions in card class
         cardList[:] = [x for x in cardList if "getCard" in x]   #keep functions with getCard in the name, as these are card functions
-        getCardsForGoodTeam = True
+        getCardsForGoodTeam = not enemyTeam
         needLeaderboardInit = not path.exists(LEADERBOARD_FILENAME)
 
         for i in cardList:                                      #run all card functions
             func = getattr(mCard, i)
-            card = func(3, getCardsForGoodTeam)     #3 is default priority for now
-            if card[3] > 0 or needLeaderboardInit:
-                cardStack.append((card[3], card))
+            try:
+                card = func(3, getCardsForGoodTeam)     #3 is default priority for now    
+                if card[3] > 0 or needLeaderboardInit:
+                    cardStack.append((card[3], card))
+            except ZeroDivisionError:
+                print(card[3])
 
         if needLeaderboardInit:
             self.initLeaderboard(cardStack)
