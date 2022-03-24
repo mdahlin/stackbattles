@@ -57,17 +57,18 @@ def updateMessageData(api, channel_id: str) -> None:
 def parseCardMessage(card: str, pattern, names) -> dict:
     parsed = {}
     for line in card.splitlines():
-       name, card_name = pattern.match(line).groups()
+        if pattern.match(line):
+            _, name, card_name = pattern.match(line).groups()
 
-       name = names.get(name, "Random")
-       if name != "Random":
-           parsed[card_name] = [name]
+            name = names.get(name, "Random")
+            if name != "Random":
+               parsed[card_name] = [name]
 
     return parsed
 
 def getCardCountString():
     messages = pickle.load( open("message_data.p", "rb") )
-    CARD_PATTERN = re.compile("(.+) - .+ \| \*\*(.+)\*\*.*")
+    CARD_PATTERN = re.compile("(.*\n)?(.+) - .+ \| \*\*(.+)\*\*.*")
     cards = set()  # set to check for duplicates (could be a list)
 
     SQUAD_NAMES = {

@@ -1,2 +1,4 @@
 secrets.py
 stack/*
+*.p
+__pycache__/*
