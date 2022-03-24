@@ -65,6 +65,7 @@ class Card:
             pData['firstBloodKill'] = p['firstBloodKill']
             pData['totalDamageTaken'] = p['totalDamageTaken']
             pData["neutralMinionsKilled"] = p['neutralMinionsKilled']
+            pData['win'] = p['win']
 
             if p['perks']['styles'][0]['selections'][0]['perk'] == 8128:
                 pData['DH Damage'] = p['perks']['styles'][0]['selections'][0]['var1']
@@ -922,6 +923,11 @@ class Card:
             return ret
         else:
             return ["", cardName, "", 0, "", 0]
+
+    def isVictory(self, getWinForGoodTeam = True):
+        team = self.goodTeamStats if getWinForGoodTeam else self.badTeamStats
+        if team is not None:
+            return team[0]['win']
         
         #Remaining Card Ideas
         #abilities used
@@ -1059,15 +1065,15 @@ class CardManager:
             self.writeLeaderboard()
 
 
-
+        isWin = mCard.isVictory()
         numCards = min(numCards, len(cardList))
 
         if len(cardStack) <= numCards:
-            return [x[1] for x in cardStack]
+            return [x[1] for x in cardStack], isWin
         else:
             cardStack.sort(key = lambda x: x[0], reverse = True)
             cardStack = cardStack[0:numCards]
-            return [x[1] for x in cardStack]
+            return [x[1] for x in cardStack], isWin
 
     def getCardsString(self, cards):
         cards.sort(key=lambda x: x[3], reverse=True)
@@ -1084,4 +1090,4 @@ if __name__ == '__main__':
     last_matches = [lol_api.getMatchIdList(puuid, 1)
     for puuid in SQUAD_PUUID.values()]
     last_match = max(last_matches)
-    cards = man.getCards(last_match[0], 5)
+    cards, isWin = man.getCards(last_match[0], 5)

@@ -27,16 +27,42 @@ def getLastNMatchIds(puuids: list, n_matches: int, api: LolAPI) -> set:
 lol_api = LolAPI(API_KEY, "americas")
 old_matches = getLastNMatchIds(SQUAD_PUUID.values(), 10, lol_api)
 
-def getCardsString(cards):
+def getCardsString(cards, isWin, streak):
     cards.sort(key=lambda x: x[3], reverse=True)
-
-    string = ''
+    winLoss = "Victory!" if isWin  else "Defeat"
+    string = winLoss + "\n"
     for card in cards:
         string += '{0} - {4} | **{1}** - {2}'.format(*card)
-        if cards[1] == "The PvE Player":
-            string += "Shoutout urgot!"
         string += '\n'
+    streakString = getWinLossStreak(streak)
+    string += streakString
     return string
+
+def getWinLossStreak(streak):
+    if streak > 0:
+        return str(streak) + " win streak"
+    elif streak < 0:
+        return str(abs(streak)) + " loss streak"
+    else:
+        return ""
+
+def updateWinLossStreak(isWin, streak):
+    if streak > 0:
+        if isWin:
+            streak += 1
+        else:
+            streak = -1
+    elif streak < 0:
+        if isWin:
+            streak = 1
+        else:
+            streak -= 1
+    else:
+        if isWin:
+            streak = 1
+        else:
+            streak = -1
+    return streak
 
 def getLeaderboardString(leaderboard):
     string = ''
@@ -56,6 +82,7 @@ def checkDiscordMessages(messages_json: list, keyword: str) -> bool:
 
     return False
 
+streak = 0
 while True:
     try:
         # occasionally request errors, so just keep trying
@@ -67,8 +94,9 @@ while True:
             # first element of new_matches in case two different
             # matches finish at the same time
             match_id = list(new_matches - old_matches)[0]
-            cards = man.getCards(match_id, 5)
-            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards)})
+            cards, isWin = man.getCards(match_id, 5)
+            streak = updateWinLossStreak(isWin, streak)
+            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin, streak)})
             # update old matches to include the latest match printed
             old_matches.add(match_id)
 
@@ -86,15 +114,15 @@ while True:
             last_matches = [lol_api.getMatchIdList(puuid, 1)
                 for puuid in SQUAD_PUUID.values()]
             last_match = max(last_matches)
-            cards = man.getCards(last_match[0], 5)
-            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards)})
+            cards, isWin = man.getCards(last_match[0], 5)
+            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin)})
 
         if checkDiscordMessages(discord_messages, "!enemyteam"):
             last_matches = [lol_api.getMatchIdList(puuid, 1)
                 for puuid in SQUAD_PUUID.values()]
             last_match = max(last_matches)
-            cards = man.getCards(last_match[0], 5, True)
-            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards)})
+            cards, isWin = man.getCards(last_match[0], 5, True)
+            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin)})
 
         if checkDiscordMessages(discord_messages, "!counts"):
             updateMessageData(discord_api, CHANNEL_ID)
