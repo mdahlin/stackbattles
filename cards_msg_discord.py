@@ -89,6 +89,13 @@ while True:
             cards = man.getCards(last_match[0], 5)
             discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards)})
 
+        if checkDiscordMessages(discord_messages, "!enemyteam"):
+            last_matches = [lol_api.getMatchIdList(puuid, 1)
+                for puuid in SQUAD_PUUID.values()]
+            last_match = max(last_matches)
+            cards = man.getCards(last_match[0], 5, True)
+            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards)})
+
         if checkDiscordMessages(discord_messages, "!counts"):
             updateMessageData(discord_api, CHANNEL_ID)
             discord_api.sendMessage(CHANNEL_ID, {"content": getCardCountString()})
