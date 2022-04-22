@@ -115,14 +115,14 @@ while True:
                 for puuid in SQUAD_PUUID.values()]
             last_match = max(last_matches)
             cards, isWin = man.getCards(last_match[0], 5)
-            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin)})
+            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin, streak)})
 
         if checkDiscordMessages(discord_messages, "!enemyteam"):
             last_matches = [lol_api.getMatchIdList(puuid, 1)
                 for puuid in SQUAD_PUUID.values()]
             last_match = max(last_matches)
             cards, isWin = man.getCards(last_match[0], 5, True)
-            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin)})
+            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin, streak)})
 
         if checkDiscordMessages(discord_messages, "!counts"):
             updateMessageData(discord_api, CHANNEL_ID)
