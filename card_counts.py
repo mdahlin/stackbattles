@@ -78,6 +78,7 @@ def getCardCountString():
             "Eminems Sweater": "Gerry",
             "Kabib Nurmagabob": "Fey",
             "Khamzat ChiMama": "Fey",
+            "Exhaust Dahlin": "Fey",
             "Lacr3188": "Colt",
             "Mahat Magandalf": "Micky",
             "TheScaryDoor123": "Steve",

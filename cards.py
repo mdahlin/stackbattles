@@ -1034,6 +1034,7 @@ class CardManager:
 
         homies_puuid = self.homies
         match = api.getMatchInfo(match_id)
+        matchType = match['info']['gameMode']
 
         mCard = Card(match, homies_puuid)                       #create card object 
         mCard.parseJson()
@@ -1069,11 +1070,12 @@ class CardManager:
         numCards = min(numCards, len(cardList))
 
         if len(cardStack) <= numCards:
-            return [x[1] for x in cardStack], isWin
+            data = [[x[1] for x in cardStack], isWin, matchType]
+            return data
         else:
             cardStack.sort(key = lambda x: x[0], reverse = True)
             cardStack = cardStack[0:numCards]
-            return [x[1] for x in cardStack], isWin
+            return [[x[1] for x in cardStack], isWin, matchType]
 
     def getCardsString(self, cards):
         cards.sort(key=lambda x: x[3], reverse=True)
