@@ -1,3 +1,4 @@
+import math
 from re import match
 from leagueapi import LolAPI
 from secrets import API_KEY
@@ -1035,6 +1036,8 @@ class CardManager:
         homies_puuid = self.homies
         match = api.getMatchInfo(match_id)
         matchType = match['info']['gameMode']
+        matchTime = match['info']['gameDuration']
+        matchTimeString = '{:d}:{:02d}'.format(math.floor(matchTime / 60), matchTime % 60)
 
         mCard = Card(match, homies_puuid)                       #create card object 
         mCard.parseJson()
@@ -1070,12 +1073,12 @@ class CardManager:
         numCards = min(numCards, len(cardList))
 
         if len(cardStack) <= numCards:
-            data = [[x[1] for x in cardStack], isWin, matchType]
+            data = [[x[1] for x in cardStack], isWin, matchType, matchTimeString]
             return data
         else:
             cardStack.sort(key = lambda x: x[0], reverse = True)
             cardStack = cardStack[0:numCards]
-            return [[x[1] for x in cardStack], isWin, matchType]
+            return [[x[1] for x in cardStack], isWin, matchType, matchTimeString]
 
     def getCardsString(self, cards):
         cards.sort(key=lambda x: x[3], reverse=True)

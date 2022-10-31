@@ -79,6 +79,7 @@ def getCardCountString():
             "Kabib Nurmagabob": "Fey",
             "Khamzat ChiMama": "Fey",
             "Exhaust Dahlin": "Fey",
+            "Im George W Bush": "Fey",
             "Lacr3188": "Colt",
             "Mahat Magandalf": "Micky",
             "TheScaryDoor123": "Steve",

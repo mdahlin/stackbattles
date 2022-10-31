@@ -27,9 +27,9 @@ def getLastNMatchIds(puuids: list, n_matches: int, api: LolAPI) -> set:
 lol_api = LolAPI(API_KEY, "americas")
 old_matches = getLastNMatchIds(SQUAD_PUUID.values(), 10, lol_api)
 
-def getCardsString(cards, isWin, streak, gameMode):
+def getCardsString(cards, isWin, streak, gameMode, matchTime):
     cards.sort(key=lambda x: x[3], reverse=True)
-    gameModeString = gameMode + " - "
+    gameModeString = gameMode + " (" + matchTime + ")" + " - "
     winLoss = "Victory!" if isWin  else "Defeat"
     string = gameModeString + winLoss + "\n"
     for card in cards:
@@ -99,8 +99,9 @@ while True:
             cards = data[0]
             isWin = data[1]
             gameMode = data[2]
+            matchTime = data[3]
             streak = updateWinLossStreak(isWin, streak)
-            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin, streak, gameMode)})
+            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin, streak, gameMode, matchTime)})
             # update old matches to include the latest match printed
             old_matches.add(match_id)
 
@@ -118,15 +119,15 @@ while True:
             last_matches = [lol_api.getMatchIdList(puuid, 1)
                 for puuid in SQUAD_PUUID.values()]
             last_match = max(last_matches)
-            cards, isWin, gameMode = man.getCards(last_match[0], 5)
-            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin, streak, gameMode)})
+            cards, isWin, gameMode, matchTime = man.getCards(last_match[0], 5)
+            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin, streak, gameMode, matchTime)})
 
         if checkDiscordMessages(discord_messages, "!enemyteam"):
             last_matches = [lol_api.getMatchIdList(puuid, 1)
                 for puuid in SQUAD_PUUID.values()]
             last_match = max(last_matches)
-            cards, isWin, gameMode = man.getCards(last_match[0], 5, True)
-            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin, streak, gameMode)})
+            cards, isWin, gameMode, matchTime = man.getCards(last_match[0], 5, True)
+            discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cards, isWin, streak, gameMode, matchTime)})
 
         if checkDiscordMessages(discord_messages, "!counts"):
             updateMessageData(discord_api, CHANNEL_ID)
