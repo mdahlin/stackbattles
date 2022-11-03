@@ -2,6 +2,7 @@ import math
 from re import match
 from leagueapi import LolAPI
 from secrets import API_KEY
+from card_data import CardData
 
 import json
 import os.path
@@ -1073,21 +1074,12 @@ class CardManager:
         numCards = min(numCards, len(cardList))
 
         if len(cardStack) <= numCards:
-            data = [[x[1] for x in cardStack], isWin, matchType, matchTimeString]
-            return data
+            return CardData([x[1] for x in cardStack], isWin, matchType, matchTimeString)
+
         else:
             cardStack.sort(key = lambda x: x[0], reverse = True)
             cardStack = cardStack[0:numCards]
-            return [[x[1] for x in cardStack], isWin, matchType, matchTimeString]
-
-    def getCardsString(self, cards):
-        cards.sort(key=lambda x: x[3], reverse=True)
-
-        string = ''
-        for card in cards:
-            string += '{0} - {4} | **{1}** - {2}'.format(*card)
-            string += '\n'
-        return string
+            return CardData([x[1] for x in cardStack], isWin, matchType, matchTimeString)
 
 if __name__ == '__main__':
     #example usage
