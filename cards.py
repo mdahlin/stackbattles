@@ -236,7 +236,7 @@ class Card:
                     
             scaling = max(1, min(3, dif / max(1000, winner[1]))) if winner[1] > 0 else 0
             if self.matchJson['info']['gameMode'] == 'ARAM':        #always show stack card in aram
-                scaling = 100
+                scaling = 99
 
             ret = []
             ret.append(winner[0]['summonerName'])
