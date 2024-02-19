@@ -926,6 +926,51 @@ class Card:
         else:
             return ["", cardName, "", 0, "", 0]
 
+    # def getCardWeirdFormula(self, basePriority, getCardForGoodTeam = True):
+    #     """
+    #     basePriority : initial priority value to be scaled by card data
+    #     getCardForGoodTeam : true if get card for homies team, false for enemy team
+
+    #     Description: 
+    #     Get the player with the highest percentage of their damage dealt as true damage
+    #     Scale priority based off of winners percent of true damage dealt
+    #     Return priority 0 if winners percentage of true damage dealt is less than 25%
+
+    #     return a list with format:
+    #         [0] - summoner name
+    #         [1] - card name
+    #         [2] - card text
+    #         [3] - card priority
+    #         [4] - summoner champion
+    #         [5] - winning statistic for leaderboard
+    #     """
+
+    #     cardName = "No counterplay"
+    #     highestPercent = 0
+    #     winner = None
+    #     teamData = self.goodTeamStats if getCardForGoodTeam else self.badTeamStats
+    #     for dmg in teamData:
+    #         totalDamage = dmg['magicDamageDealtToChampions'] + dmg['physicalDamageDealtToChampions'] + dmg['trueDamageDealtToChampions']
+    #         trueDamage = dmg['trueDamageDealtToChampions']
+    #         percentTrue = trueDamage / totalDamage
+    #         if(percentTrue > highestPercent):
+    #             highestPercent = percentTrue
+    #             winner = dmg
+
+    #     highestPercent *= 100
+    #     scaling = 0 if highestPercent < 25 else min(1, max(3, highestPercent / 20))
+    #     if winner is not None:
+    #         ret = []
+    #         ret.append(winner['summonerName'])
+    #         ret.append(cardName)
+    #         ret.append(f'{highestPercent:.2f}% of damage dealt as true damage')
+    #         ret.append(basePriority * scaling)
+    #         ret.append(winner['championName'])
+    #         ret.append(highestPercent)
+    #         return ret
+    #     else:
+    #         return ["", cardName, "", 0, "", 0]
+
     def isVictory(self, getWinForGoodTeam = True):
         team = self.goodTeamStats if getWinForGoodTeam else self.badTeamStats
         if team is not None:
@@ -1086,5 +1131,5 @@ if __name__ == '__main__':
     man = CardManager(player_puuid=SQUAD_PUUID["Fey"])
     last_matches = [lol_api.getMatchIdList(puuid, 1)
     for puuid in SQUAD_PUUID.values()]
-    last_match = max(last_matches)
+    last_match = min(last_matches)
     cards, isWin = man.getCards(last_match[0], 5)

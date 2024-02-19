@@ -2,3 +2,4 @@ secrets.py
 stack/*
 *.p
 __pycache__/*
+highscores.json
