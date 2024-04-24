@@ -50,3 +50,7 @@ class LolAPI:
     def getMatchInfo(self, match_id: str) -> dict:
         res = self._request(f'/lol/match/v5/matches/{match_id}')
         return res.json()
+
+    def getMatchTimeline(self, match_id: str) -> dict:
+        res = self._request(f'/lol/match/v5/matches/{match_id}/timeline')
+        return res.json()
