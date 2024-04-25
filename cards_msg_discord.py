@@ -42,7 +42,7 @@ def calc_aram_death_timer(level: int) -> int:
     """
     return (level * 2 + 4) * 1000
 
-def find_overlaping_ranges(ranges: list[tuple], leeway: int = 0) -> list[tuple]:
+def find_overlaping_ranges(ranges, leeway: int = 0):
     """merges ranges that overlap
 
     Mostly yoinked from https://stackoverflow.com/a/59378344
@@ -70,7 +70,7 @@ def find_overlaping_ranges(ranges: list[tuple], leeway: int = 0) -> list[tuple]:
             curr_start, curr_stop = start, stop
     yield curr_start, curr_stop
 
-def getMaxStaggerStr(match_id: str, squad_puuids: list[str], api: LolAPI) -> str:
+def getMaxStaggerStr(match_id: str, squad_puuids, api: LolAPI) -> str:
     """str for card output about how long we staggered for
 
     TODOs
@@ -174,7 +174,7 @@ while True:
             # matches finish at the same time
             match_id = list(new_matches - old_matches)[0]
             cardData = man.getCards(match_id, 5)
-            stagger = getMaxStaggerStr(last_match[0], SQUAD_PUUID.values(), lol_api)
+            stagger = getMaxStaggerStr(match_id, SQUAD_PUUID.values(), lol_api)
             streak = updateWinLossStreak(cardData.getIsWin(), streak)
             discord_api.sendMessage(CHANNEL_ID, {"content": getCardsString(cardData, streak, stagger)})
             # update old matches to include the latest match printed
